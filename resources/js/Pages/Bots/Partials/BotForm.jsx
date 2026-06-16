@@ -4,6 +4,7 @@ import InputLabel from '@/Components/InputLabel';
 import PrimaryButton from '@/Components/PrimaryButton';
 import TextInput from '@/Components/TextInput';
 import { Link } from '@inertiajs/react';
+import StrategyAsianBreakout from './StrategyAsianBreakout';
 
 const directionOptions = [
     { value: 'both', label: 'Ambos (compra y venta)' },
@@ -11,7 +12,22 @@ const directionOptions = [
     { value: 'sell', label: 'Solo venta (sell)' },
 ];
 
-export default function BotForm({ data, setData, errors, processing, onSubmit, submitLabel }) {
+const timeframeOptions = ['M1', 'M5', 'M15', 'M30', 'H1', 'H4', 'D1'];
+
+const strategyOptions = [
+    { value: 'simple', label: 'Simple (dirección fija, una por vela)' },
+    { value: 'asian_breakout', label: 'Asian Range Breakout (prop firm)' },
+];
+
+export default function BotForm({
+    data,
+    setData,
+    errors,
+    processing,
+    onSubmit,
+    submitLabel,
+    strategyDefaults = {},
+}) {
     // symbols se guarda como array; lo editamos como texto separado por comas.
     const symbolsText = Array.isArray(data.symbols) ? data.symbols.join(', ') : '';
 
@@ -21,6 +37,18 @@ export default function BotForm({ data, setData, errors, processing, onSubmit, s
             .map((s) => s.trim().toUpperCase())
             .filter(Boolean);
         setData('symbols', list);
+    };
+
+    // Actualiza un parámetro suelto de la estrategia.
+    const setParam = (key, value) => {
+        setData('parameters', { ...(data.parameters || {}), [key]: value });
+    };
+
+    // Al cambiar de estrategia, rellena parámetros con los defaults que faltan.
+    const changeStrategy = (value) => {
+        setData('strategy', value);
+        const defaults = strategyDefaults[value] || {};
+        setData('parameters', { ...defaults, ...(data.parameters || {}) });
     };
 
     return (
@@ -50,6 +78,44 @@ export default function BotForm({ data, setData, errors, processing, onSubmit, s
                     <InputError className="mt-2" message={errors.symbols} />
                 </div>
 
+                <div>
+                    <InputLabel htmlFor="timeframe" value="Temporalidad (vela)" />
+                    <select
+                        id="timeframe"
+                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                        value={data.timeframe}
+                        onChange={(e) => setData('timeframe', e.target.value)}
+                    >
+                        {timeframeOptions.map((tf) => (
+                            <option key={tf} value={tf}>
+                                {tf}
+                            </option>
+                        ))}
+                    </select>
+                    <p className="mt-1 text-xs text-gray-500">
+                        El bot abrirá como máximo una operación por vela de esta
+                        temporalidad. Se puede cambiar sin tocar MT5.
+                    </p>
+                    <InputError className="mt-2" message={errors.timeframe} />
+                </div>
+
+                <div>
+                    <InputLabel htmlFor="strategy" value="Estrategia" />
+                    <select
+                        id="strategy"
+                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                        value={data.strategy}
+                        onChange={(e) => changeStrategy(e.target.value)}
+                    >
+                        {strategyOptions.map((o) => (
+                            <option key={o.value} value={o.value}>
+                                {o.label}
+                            </option>
+                        ))}
+                    </select>
+                    <InputError className="mt-2" message={errors.strategy} />
+                </div>
+
                 <label className="flex items-center">
                     <Checkbox
                         checked={!!data.is_active}
@@ -61,6 +127,20 @@ export default function BotForm({ data, setData, errors, processing, onSubmit, s
                 </label>
             </section>
 
+            {data.strategy === 'asian_breakout' && (
+                <section className="space-y-4 border-t border-gray-100 pt-6">
+                    <h3 className="text-sm font-semibold uppercase tracking-wide text-gray-500">
+                        Parámetros · Asian Range Breakout
+                    </h3>
+                    <StrategyAsianBreakout
+                        params={data.parameters || {}}
+                        setParam={setParam}
+                    />
+                </section>
+            )}
+
+            {data.strategy === 'simple' && (
+            <>
             <section className="space-y-4 border-t border-gray-100 pt-6">
                 <h3 className="text-sm font-semibold uppercase tracking-wide text-gray-500">
                     Cómo abre la operación
@@ -192,6 +272,8 @@ export default function BotForm({ data, setData, errors, processing, onSubmit, s
                     </div>
                 </div>
             </section>
+            </>
+            )}
 
             <div className="flex items-center gap-4">
                 <PrimaryButton disabled={processing}>{submitLabel}</PrimaryButton>

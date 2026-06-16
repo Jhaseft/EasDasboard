@@ -16,6 +16,9 @@ class Bot extends Model
         'name',
         'is_active',
         'symbols',
+        'timeframe',
+        'strategy',
+        'parameters',
         'direction',
         'lot_size',
         'stop_loss_pips',
@@ -32,9 +35,69 @@ class Bot extends Model
         return [
             'is_active' => 'boolean',
             'symbols' => 'array',
+            'parameters' => 'array',
             'lot_size' => 'decimal:2',
             'risk_percent' => 'decimal:2',
         ];
+    }
+
+    /**
+     * Parametros por defecto de cada estrategia. El admin los edita desde el
+     * panel; cualquier clave ausente se rellena con estos valores.
+     *
+     * @return array<string, mixed>
+     */
+    public static function defaultParameters(string $strategy): array
+    {
+        return match ($strategy) {
+            'asian_breakout' => [
+                // Gestion prop firm
+                'max_daily_loss_pct' => 4.0,
+                'risk_per_trade_pct' => 0.5,
+                'max_daily_trades' => 3,
+                'max_lot_cap' => 0.0,
+                // Filtro de senal
+                'volume_surge_multiplier' => 2.0,
+                // Ciclo de intento / forzado
+                'force_trade_cycle' => true,
+                'attempt_interval_min' => 5,
+                'auto_relax_filters' => true,
+                'relax_per_attempt' => 0.15,
+                'max_relax_steps' => 6,
+                'force_entry_at_max' => true,
+                'trade_sessions_only' => true,
+                // Sesiones (hora del servidor del broker)
+                'asian_start_hour' => 0,
+                'asian_end_hour' => 7,
+                'london_start_hour' => 8,
+                'london_end_hour' => 10,
+                'ny_start_hour' => 15,
+                'ny_end_hour' => 17,
+                // Gestion R:R y tecnicos
+                'tp_rr_multiplier' => 2.0,
+                'atr_period' => 14,
+                'atr_sl_floor_mult' => 1.0,
+                'volume_lookback' => 20,
+                'max_spread_points' => 60,
+                'breakout_buffer_pips' => 2.0,
+                'min_free_margin_pct' => 20.0,
+                'remove_ea_on_dd' => true,
+            ],
+            default => [],
+        };
+    }
+
+    /**
+     * Parametros del bot fusionados con los valores por defecto de su estrategia.
+     *
+     * @return array<string, mixed>
+     */
+    public function mergedParameters(): array
+    {
+        return array_merge(
+            self::defaultParameters($this->strategy ?? 'simple'),
+            is_array($this->parameters) ? $this->parameters : []
+        );
     }
 
     public function user(): BelongsTo
@@ -77,6 +140,7 @@ class Bot extends Model
             'id' => $this->id,
             'name' => $this->name,
             'symbols' => $this->symbols ?? [],
+            'timeframe' => $this->timeframe,
             'entry' => [
                 'direction' => $this->direction,
                 'lot_size' => (float) $this->lot_size,

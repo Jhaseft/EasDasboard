@@ -18,9 +18,21 @@ el lotaje, SL, TP y máximo de operaciones configurados en el panel.
 
 ## Archivos
 
-- **`EasDashboardEA.mq5`** ← lo que corres en MT5 (esta es la opción que quieres).
-- `runner.py` ← alternativa en Python (solo si prefirieras un proceso externo en
-  vez de un EA). Para el caso EA puedes ignorarlo.
+- **`PropFirmBreakoutEA.mq5`** ← EA de la estrategia **Asian Range Breakout** (prop firm),
+  con TODOS sus parámetros editables desde el panel por `BotId`. Úsalo con bots
+  cuya estrategia sea `asian_breakout`.
+- **`EasDashboardEA.mq5`** ← EA simple (dirección fija, una por vela). Úsalo con
+  bots cuya estrategia sea `simple`.
+- `runner.py` ← alternativa en Python (opcional). Para el caso EA puedes ignorarlo.
+
+## Estrategia editable (Asian Breakout)
+
+1. En el panel, crea/edita un bot y elige **Estrategia = Asian Range Breakout**.
+   Aparece una sección con todos los parámetros (DD diario, riesgo %, sesiones,
+   ATR, volumen, ciclo de relajación, etc.). Edítalos y guarda.
+2. En MT5 usa **`PropFirmBreakoutEA.mq5`**, ponle el input `BotId` del bot.
+3. El EA carga los parámetros desde la web cada `Config_Refresh_Sec` segundos.
+   Cualquier cambio en el panel se aplica solo, sin recompilar ni re-arrastrar.
 
 ## Instalar el EA en tu VPS Linux
 

@@ -24,12 +24,19 @@ class BotController extends Controller
 
     public function create(): Response
     {
-        return Inertia::render('Bots/Create');
+        return Inertia::render('Bots/Create', [
+            'strategyDefaults' => [
+                'asian_breakout' => Bot::defaultParameters('asian_breakout'),
+            ],
+        ]);
     }
 
     public function store(BotRequest $request): RedirectResponse
     {
-        $request->user()->bots()->create($request->validated());
+        $data = $request->validated();
+        $data['parameters'] = $this->cleanParameters($data['strategy'], $data['parameters'] ?? []);
+
+        $request->user()->bots()->create($data);
 
         return redirect()->route('bots.index')->with('success', 'Bot creado correctamente.');
     }
@@ -40,6 +47,9 @@ class BotController extends Controller
 
         return Inertia::render('Bots/Edit', [
             'bot' => $bot,
+            'strategyDefaults' => [
+                'asian_breakout' => Bot::defaultParameters('asian_breakout'),
+            ],
         ]);
     }
 
@@ -47,7 +57,10 @@ class BotController extends Controller
     {
         $this->authorizeBot($request, $bot);
 
-        $bot->update($request->validated());
+        $data = $request->validated();
+        $data['parameters'] = $this->cleanParameters($data['strategy'], $data['parameters'] ?? []);
+
+        $bot->update($data);
 
         return redirect()->route('bots.index')->with('success', 'Bot actualizado correctamente.');
     }
@@ -76,5 +89,36 @@ class BotController extends Controller
     protected function authorizeBot(Request $request, Bot $bot): void
     {
         abort_unless($bot->user_id === $request->user()->id, 403);
+    }
+
+    /**
+     * Mantiene solo las claves conocidas de la estrategia y castea los tipos
+     * según el valor por defecto (bool/int/float).
+     *
+     * @param  array<string, mixed>  $input
+     * @return array<string, mixed>
+     */
+    protected function cleanParameters(string $strategy, array $input): array
+    {
+        $defaults = Bot::defaultParameters($strategy);
+        $clean = [];
+
+        foreach ($defaults as $key => $default) {
+            if (! array_key_exists($key, $input)) {
+                continue;
+            }
+
+            $value = $input[$key];
+
+            if (is_bool($default)) {
+                $clean[$key] = filter_var($value, FILTER_VALIDATE_BOOLEAN);
+            } elseif (is_int($default)) {
+                $clean[$key] = (int) $value;
+            } else {
+                $clean[$key] = (float) $value;
+            }
+        }
+
+        return $clean;
     }
 }

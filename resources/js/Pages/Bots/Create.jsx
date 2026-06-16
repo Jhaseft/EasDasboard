@@ -2,11 +2,14 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, useForm } from '@inertiajs/react';
 import BotForm from './Partials/BotForm';
 
-export default function Create() {
+export default function Create({ strategyDefaults }) {
     const { data, setData, post, processing, errors } = useForm({
         name: '',
         is_active: false,
         symbols: [],
+        timeframe: 'H1',
+        strategy: 'simple',
+        parameters: {},
         direction: 'both',
         lot_size: '0.01',
         stop_loss_pips: '',
@@ -43,6 +46,7 @@ export default function Create() {
                             processing={processing}
                             onSubmit={submit}
                             submitLabel="Crear bot"
+                            strategyDefaults={strategyDefaults}
                         />
                     </div>
                 </div>

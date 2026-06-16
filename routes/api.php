@@ -14,5 +14,6 @@ use Illuminate\Support\Facades\Route;
 Route::middleware('api.key')->group(function () {
     Route::get('/bots/active', [BotApiController::class, 'active'])->name('api.bots.active');
     Route::get('/bots/signal', [BotApiController::class, 'signal'])->name('api.bots.signal');
+    Route::get('/bots/{bot}/signal', [BotApiController::class, 'signalById'])->name('api.bots.signal.id');
     Route::get('/bots/{bot}', [BotApiController::class, 'show'])->name('api.bots.show');
 });

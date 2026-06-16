@@ -68,24 +68,30 @@ class BotApiController extends Controller
             ]);
         }
 
-        $withinWindow = $bot->withinTradingWindow();
+        return response()->json($this->buildSignal($bot, $symbol));
+    }
 
-        return response()->json([
-            'server_time' => now()->toIso8601String(),
-            'symbol' => $symbol,
-            'found' => true,
-            'bot_id' => $bot->id,
-            'name' => $bot->name,
-            // El servidor decide: solo operar si está activo y dentro del horario.
-            'should_trade' => $withinWindow,
-            'reason' => $withinWindow ? 'ok' : 'outside_trading_window',
-            'direction' => $bot->direction,
-            'lot_size' => (float) $bot->lot_size,
-            'stop_loss_pips' => $bot->stop_loss_pips ?? 0,
-            'take_profit_pips' => $bot->take_profit_pips ?? 0,
-            'max_open_trades' => $bot->max_open_trades,
-            'trailing_stop_pips' => $bot->trailing_stop_pips ?? 0,
-        ]);
+    /**
+     * Señal plana para un EA identificado por su BotId (recomendado).
+     * Permite varios bots en el mismo símbolo (ej. Oro-A y Oro-B).
+     *
+     * GET /api/bots/{bot}/signal
+     */
+    public function signalById(Bot $bot): JsonResponse
+    {
+        if (! $bot->is_active) {
+            return response()->json([
+                'server_time' => now()->toIso8601String(),
+                'bot_id' => $bot->id,
+                'found' => true,
+                'should_trade' => false,
+                'reason' => 'bot_inactive',
+            ]);
+        }
+
+        $symbol = $bot->symbols[0] ?? '';
+
+        return response()->json($this->buildSignal($bot, $symbol));
     }
 
     /**
@@ -99,5 +105,37 @@ class BotApiController extends Controller
             'server_time' => now()->toIso8601String(),
             'bot' => $bot->toOperationConfig(),
         ]);
+    }
+
+    /**
+     * Construye la respuesta plana de señal para un bot.
+     *
+     * @return array<string, mixed>
+     */
+    protected function buildSignal(Bot $bot, string $symbol): array
+    {
+        $withinWindow = $bot->withinTradingWindow();
+
+        return [
+            'server_time' => now()->toIso8601String(),
+            'symbol' => $symbol,
+            'found' => true,
+            'bot_id' => $bot->id,
+            'name' => $bot->name,
+            // El servidor decide: solo operar si está activo y dentro del horario.
+            'should_trade' => $withinWindow,
+            'reason' => $withinWindow ? 'ok' : 'outside_trading_window',
+            'timeframe' => $bot->timeframe,
+            'strategy' => $bot->strategy ?? 'simple',
+            'direction' => $bot->direction,
+            'lot_size' => (float) $bot->lot_size,
+            'stop_loss_pips' => $bot->stop_loss_pips ?? 0,
+            'take_profit_pips' => $bot->take_profit_pips ?? 0,
+            'max_open_trades' => $bot->max_open_trades,
+            'trailing_stop_pips' => $bot->trailing_stop_pips ?? 0,
+            'risk_percent' => $bot->risk_percent !== null ? (float) $bot->risk_percent : 0,
+            // Parametros de la estrategia (fusionados con los defaults).
+            'parameters' => $bot->mergedParameters(),
+        ];
     }
 }

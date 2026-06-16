@@ -24,6 +24,14 @@ class BotRequest extends FormRequest
             'symbols' => ['nullable', 'array'],
             'symbols.*' => ['string', 'max:20'],
 
+            'timeframe' => ['required', Rule::in(['M1', 'M5', 'M15', 'M30', 'H1', 'H4', 'D1'])],
+
+            'strategy' => ['required', Rule::in(['simple', 'asian_breakout'])],
+            'parameters' => ['nullable', 'array'],
+            // Cada parametro es numerico o booleano; se valida de forma laxa y
+            // luego el modelo rellena los ausentes con los defaults de la estrategia.
+            'parameters.*' => ['nullable'],
+
             'direction' => ['required', Rule::in(['buy', 'sell', 'both'])],
             'lot_size' => ['required', 'numeric', 'min:0.01', 'max:1000'],
             'stop_loss_pips' => ['nullable', 'integer', 'min:0', 'max:100000'],

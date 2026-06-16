@@ -2,11 +2,19 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, useForm } from '@inertiajs/react';
 import BotForm from './Partials/BotForm';
 
-export default function Edit({ bot }) {
+export default function Edit({ bot, strategyDefaults }) {
+    const botStrategy = bot.strategy ?? 'simple';
     const { data, setData, put, processing, errors } = useForm({
         name: bot.name ?? '',
         is_active: !!bot.is_active,
         symbols: bot.symbols ?? [],
+        timeframe: bot.timeframe ?? 'H1',
+        strategy: botStrategy,
+        // Fusiona los defaults de la estrategia con lo guardado en el bot.
+        parameters: {
+            ...(strategyDefaults?.[botStrategy] ?? {}),
+            ...(bot.parameters ?? {}),
+        },
         direction: bot.direction ?? 'both',
         lot_size: bot.lot_size ?? '0.01',
         stop_loss_pips: bot.stop_loss_pips ?? '',
@@ -47,6 +55,7 @@ export default function Edit({ bot }) {
                             processing={processing}
                             onSubmit={submit}
                             submitLabel="Guardar cambios"
+                            strategyDefaults={strategyDefaults}
                         />
                     </div>
                 </div>
