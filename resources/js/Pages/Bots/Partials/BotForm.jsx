@@ -12,7 +12,7 @@ const directionOptions = [
     { value: 'sell', label: 'Solo venta (sell)' },
 ];
 
-const timeframeOptions = ['M1', 'M5', 'M15', 'M30', 'H1', 'H4', 'D1'];
+const timeframeOptions = ['M1', 'M5', 'M10', 'M15', 'M30', 'H1', 'H4', 'D1'];
 
 const strategyOptions = [
     { value: 'simple', label: 'Simple (dirección fija, una por vela)' },

@@ -70,6 +70,8 @@ bool   g_remove_ea_on_dd     = true;
 // Estado de conexion / config
 ENUM_TIMEFRAMES g_tf        = PERIOD_M10; // temporalidad del bot (de la web)
 string g_botSymbol          = "";
+string g_strategy           = "";         // estrategia del bot (debe ser asian_breakout)
+bool   g_configValid        = false;      // config completa y coherente
 bool   g_active             = false;      // should_trade del servidor
 bool   g_loaded             = false;      // hubo al menos una carga correcta
 int    g_magic              = 0;
@@ -152,7 +154,7 @@ void OnTick()
     if(TimeCurrent() - g_lastConfigLoad >= MathMax(3, Config_Refresh_Sec))
         LoadConfig();
 
-    if(!g_loaded) return;
+    if(!g_loaded || !g_configValid) return;
 
     //--- BLOQUE 1: Control de Drawdown Diario — PRIORIDAD MAXIMA
     if(!MonitorDailyDrawdown()) return;
@@ -182,7 +184,7 @@ void OnTick()
 //+------------------------------------------------------------------+
 void OnTimer()
 {
-    if(!g_loaded || !g_force_trade_cycle) return;
+    if(!g_loaded || !g_configValid || !g_force_trade_cycle) return;
 
     if(ddBreached || tradingHalted) return;
     if(dailyTradeCount >= g_max_daily_trades) { relaxLevel = 0; return; }
@@ -227,7 +229,20 @@ bool LoadConfig()
 
     g_active    = JsonBool(body, "should_trade");
     g_botSymbol = JsonString(body, "symbol");
+    g_strategy  = JsonString(body, "strategy");
     g_tf        = TimeframeFromString(JsonString(body, "timeframe"));
+
+    // Este EA SOLO sirve para bots con estrategia 'asian_breakout'.
+    if(g_strategy != "asian_breakout")
+    {
+        g_configValid = false;
+        g_active = false;
+        PrintFormat("El bot #%d usa la estrategia '%s', no 'asian_breakout'. "
+                    "Cambia la estrategia en el panel. EA en espera (sin operar).",
+                    BotId, g_strategy);
+        g_loaded = true;
+        return true;
+    }
 
     if(g_botSymbol != "" && StringFind(Symbol(), g_botSymbol) < 0 && StringFind(g_botSymbol, Symbol()) < 0)
         PrintFormat("AVISO: grafico %s pero bot #%d opera %s. Pon el EA en un grafico de %s.",
@@ -266,6 +281,12 @@ bool LoadConfig()
     if(g_max_daily_trades < 1) g_max_daily_trades = 1;
     if(g_attempt_interval_min < 1) g_attempt_interval_min = 1;
 
+    //--- Config valida solo si el limite de DD es coherente (>0)
+    g_configValid = (g_max_daily_loss_pct > 0.0 && g_risk_per_trade_pct > 0.0);
+    if(!g_configValid)
+        PrintFormat("Config invalida (DD %.2f%%, riesgo %.2f%%). EA en espera, no opera.",
+                    g_max_daily_loss_pct, g_risk_per_trade_pct);
+
     //--- Magic
     g_magic = MagicBase + BotId;
     Trade.SetExpertMagicNumber(g_magic);
@@ -295,6 +316,7 @@ ENUM_TIMEFRAMES TimeframeFromString(const string tf)
 {
     if(tf == "M1")  return PERIOD_M1;
     if(tf == "M5")  return PERIOD_M5;
+    if(tf == "M10") return PERIOD_M10;
     if(tf == "M15") return PERIOD_M15;
     if(tf == "M30") return PERIOD_M30;
     if(tf == "H1")  return PERIOD_H1;
@@ -413,6 +435,7 @@ bool AttemptEntry()
 bool MonitorDailyDrawdown()
 {
     if(ddBreached) return false;
+    if(g_max_daily_loss_pct <= 0.0) return true; // limite invalido: no bloquear
 
     double currentDD = GetCurrentDailyDrawdown();
     if(currentDD >= g_max_daily_loss_pct)

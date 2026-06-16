@@ -42,6 +42,7 @@ ENUM_TIMEFRAMES TimeframeFromString(const string tf)
 {
    if(tf == "M1")  return PERIOD_M1;
    if(tf == "M5")  return PERIOD_M5;
+   if(tf == "M10") return PERIOD_M10;
    if(tf == "M15") return PERIOD_M15;
    if(tf == "M30") return PERIOD_M30;
    if(tf == "H1")  return PERIOD_H1;

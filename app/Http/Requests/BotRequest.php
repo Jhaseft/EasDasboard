@@ -24,7 +24,7 @@ class BotRequest extends FormRequest
             'symbols' => ['nullable', 'array'],
             'symbols.*' => ['string', 'max:20'],
 
-            'timeframe' => ['required', Rule::in(['M1', 'M5', 'M15', 'M30', 'H1', 'H4', 'D1'])],
+            'timeframe' => ['required', Rule::in(['M1', 'M5', 'M10', 'M15', 'M30', 'H1', 'H4', 'D1'])],
 
             'strategy' => ['required', Rule::in(['simple', 'asian_breakout'])],
             'parameters' => ['nullable', 'array'],
