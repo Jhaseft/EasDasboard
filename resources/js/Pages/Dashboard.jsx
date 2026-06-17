@@ -15,8 +15,8 @@ export default function Dashboard({ stats }) {
         >
             <Head title="Dashboard" />
 
-            <div className="py-12">
-                <div className="mx-auto max-w-7xl space-y-6 sm:px-6 lg:px-8">
+            <div className="py-6 sm:py-12">
+                <div className="mx-auto max-w-7xl space-y-6 px-4 sm:px-6 lg:px-8">
                     <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                         <div className="rounded-lg bg-white p-6 shadow-sm">
                             <div className="text-sm font-medium text-gray-500">
