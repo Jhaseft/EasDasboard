@@ -22,12 +22,13 @@ class BotController extends Controller
         ]);
     }
 
-    public function create(): Response
+    public function create(Request $request): Response
     {
         return Inertia::render('Bots/Create', [
             'strategyDefaults' => [
                 'asian_breakout' => Bot::defaultParameters('asian_breakout'),
             ],
+            'brokerAccounts' => $this->brokerAccountOptions($request),
         ]);
     }
 
@@ -50,7 +51,24 @@ class BotController extends Controller
             'strategyDefaults' => [
                 'asian_breakout' => Bot::defaultParameters('asian_breakout'),
             ],
+            'brokerAccounts' => $this->brokerAccountOptions($request),
         ]);
+    }
+
+    /**
+     * Cuentas de broker del usuario para el selector del formulario.
+     *
+     * @return \Illuminate\Support\Collection<int, array<string, mixed>>
+     */
+    protected function brokerAccountOptions(Request $request)
+    {
+        return $request->user()->brokerAccounts()
+            ->get(['id', 'name', 'platform', 'login', 'provision_state'])
+            ->map(fn ($a) => [
+                'id' => $a->id,
+                'label' => "{$a->name} ({$a->platform}/{$a->login})",
+                'ready' => $a->provision_state === 'deployed',
+            ]);
     }
 
     public function update(BotRequest $request, Bot $bot): RedirectResponse

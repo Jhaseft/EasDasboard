@@ -21,6 +21,12 @@ class BotRequest extends FormRequest
             'name' => ['required', 'string', 'max:255'],
             'is_active' => ['boolean'],
 
+            // Cuenta de broker (MetaApi) sobre la que opera. Debe ser del usuario.
+            'broker_account_id' => [
+                'nullable',
+                Rule::exists('broker_accounts', 'id')->where('user_id', $this->user()->id),
+            ],
+
             'symbols' => ['nullable', 'array'],
             'symbols.*' => ['string', 'max:20'],
 

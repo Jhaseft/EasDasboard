@@ -18,6 +18,18 @@ return [
         'key' => env('BOT_API_KEY'),
     ],
 
+    'metaapi' => [
+        // Token de MetaApi (lo generas en https://app.metaapi.cloud).
+        'token' => env('METAAPI_TOKEN'),
+        // Region por defecto donde se despliegan las cuentas (new-york, london, singapore...).
+        'region' => env('METAAPI_REGION', 'new-york'),
+        // Base de la Provisioning API. Normalmente no hace falta cambiarla.
+        'provisioning_url' => env('METAAPI_PROVISIONING_URL', 'https://mt-provisioning-api-v1.agiliumtrade.agiliumtrade.ai'),
+        // Tipo de cuenta cloud y fiabilidad por defecto.
+        'account_type' => env('METAAPI_ACCOUNT_TYPE', 'cloud-g2'),
+        'reliability' => env('METAAPI_RELIABILITY', 'high'),
+    ],
+
     'postmark' => [
         'key' => env('POSTMARK_API_KEY'),
     ],

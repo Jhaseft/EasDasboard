@@ -38,4 +38,12 @@ class User extends Authenticatable
     {
         return $this->hasMany(Bot::class);
     }
+
+    /**
+     * @return HasMany<BrokerAccount, $this>
+     */
+    public function brokerAccounts(): HasMany
+    {
+        return $this->hasMany(BrokerAccount::class);
+    }
 }

@@ -27,6 +27,7 @@ export default function BotForm({
     onSubmit,
     submitLabel,
     strategyDefaults = {},
+    brokerAccounts = [],
 }) {
     // symbols se guarda como array; lo editamos como texto separado por comas.
     const symbolsText = Array.isArray(data.symbols) ? data.symbols.join(', ') : '';
@@ -64,6 +65,36 @@ export default function BotForm({
                         isFocused
                     />
                     <InputError className="mt-2" message={errors.name} />
+                </div>
+
+                <div>
+                    <InputLabel htmlFor="broker_account_id" value="Cuenta de broker" />
+                    <select
+                        id="broker_account_id"
+                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                        value={data.broker_account_id ?? ''}
+                        onChange={(e) =>
+                            setData(
+                                'broker_account_id',
+                                e.target.value ? Number(e.target.value) : null,
+                            )
+                        }
+                    >
+                        <option value="">— Sin cuenta (el bot no operará) —</option>
+                        {brokerAccounts.map((a) => (
+                            <option key={a.id} value={a.id}>
+                                {a.label}
+                                {a.ready ? '' : ' · no lista'}
+                            </option>
+                        ))}
+                    </select>
+                    {brokerAccounts.length === 0 && (
+                        <p className="mt-1 text-xs text-amber-600">
+                            No tienes cuentas conectadas. Conecta una en «Cuentas»
+                            para que el bot pueda operar.
+                        </p>
+                    )}
+                    <InputError className="mt-2" message={errors.broker_account_id} />
                 </div>
 
                 <div>

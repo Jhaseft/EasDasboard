@@ -13,6 +13,7 @@ class Bot extends Model
 
     protected $fillable = [
         'user_id',
+        'broker_account_id',
         'name',
         'is_active',
         'symbols',
@@ -103,6 +104,11 @@ class Bot extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function brokerAccount(): BelongsTo
+    {
+        return $this->belongsTo(BrokerAccount::class);
     }
 
     /**

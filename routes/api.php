@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\BotApiController;
+use App\Http\Controllers\Api\WorkerController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -16,4 +17,7 @@ Route::middleware('api.key')->group(function () {
     Route::get('/bots/signal', [BotApiController::class, 'signal'])->name('api.bots.signal');
     Route::get('/bots/{bot}/signal', [BotApiController::class, 'signalById'])->name('api.bots.signal.id');
     Route::get('/bots/{bot}', [BotApiController::class, 'show'])->name('api.bots.show');
+
+    // Worker de Python (MetaApi cloud): cuentas operables + bots activos.
+    Route::get('/worker/accounts', [WorkerController::class, 'accounts'])->name('api.worker.accounts');
 });

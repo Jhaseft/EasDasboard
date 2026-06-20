@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\BotController;
+use App\Http\Controllers\BrokerAccountController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
@@ -33,6 +34,11 @@ Route::middleware('auth')->group(function () {
 
     Route::resource('bots', BotController::class)->except(['show']);
     Route::patch('/bots/{bot}/toggle', [BotController::class, 'toggle'])->name('bots.toggle');
+
+    Route::resource('broker-accounts', BrokerAccountController::class)
+        ->only(['index', 'create', 'store', 'destroy']);
+    Route::patch('/broker-accounts/{brokerAccount}/toggle', [BrokerAccountController::class, 'toggle'])
+        ->name('broker-accounts.toggle');
 });
 
 require __DIR__.'/auth.php';
