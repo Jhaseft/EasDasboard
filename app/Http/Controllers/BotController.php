@@ -27,6 +27,7 @@ class BotController extends Controller
         return Inertia::render('Bots/Create', [
             'strategyDefaults' => [
                 'asian_breakout' => Bot::defaultParameters('asian_breakout'),
+                'multitf_orderflow' => Bot::defaultParameters('multitf_orderflow'),
             ],
             'brokerAccounts' => $this->brokerAccountOptions($request),
         ]);
@@ -50,6 +51,7 @@ class BotController extends Controller
             'bot' => $bot,
             'strategyDefaults' => [
                 'asian_breakout' => Bot::defaultParameters('asian_breakout'),
+                'multitf_orderflow' => Bot::defaultParameters('multitf_orderflow'),
             ],
             'brokerAccounts' => $this->brokerAccountOptions($request),
         ]);

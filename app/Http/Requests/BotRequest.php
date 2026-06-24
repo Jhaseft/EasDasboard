@@ -32,7 +32,7 @@ class BotRequest extends FormRequest
 
             'timeframe' => ['required', Rule::in(['M1', 'M5', 'M10', 'M15', 'M30', 'H1', 'H4', 'D1'])],
 
-            'strategy' => ['required', Rule::in(['simple', 'asian_breakout'])],
+            'strategy' => ['required', Rule::in(['simple', 'asian_breakout', 'multitf_orderflow'])],
             'parameters' => ['nullable', 'array'],
             // Cada parametro es numerico o booleano; se valida de forma laxa y
             // luego el modelo rellena los ausentes con los defaults de la estrategia.
