@@ -3,6 +3,7 @@
 namespace App\Services\MetaApi;
 
 use App\Models\BrokerAccount;
+use App\Models\SlaveAccount;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Facades\Http;
 use RuntimeException;
@@ -45,7 +46,7 @@ class MetaApiProvisioning
      * Las credenciales NO se guardan en nuestra BD: se mandan aqui y MetaApi
      * las almacena cifradas.
      */
-    public function createAccount(BrokerAccount $account, string $password): string
+    public function createAccount(BrokerAccount|SlaveAccount $account, string $password): string
     {
         $payload = [
             'name' => $account->name,

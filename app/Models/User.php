@@ -46,4 +46,12 @@ class User extends Authenticatable
     {
         return $this->hasMany(BrokerAccount::class);
     }
+
+    /**
+     * @return HasMany<SlaveAccount, $this>
+     */
+    public function slaveAccounts(): HasMany
+    {
+        return $this->hasMany(SlaveAccount::class);
+    }
 }

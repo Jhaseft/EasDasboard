@@ -2,7 +2,9 @@
 
 use App\Http\Controllers\BotController;
 use App\Http\Controllers\BrokerAccountController;
+use App\Http\Controllers\CopyTradeController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\SlaveAccountController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -39,6 +41,16 @@ Route::middleware('auth')->group(function () {
         ->only(['index', 'create', 'store', 'destroy']);
     Route::patch('/broker-accounts/{brokerAccount}/toggle', [BrokerAccountController::class, 'toggle'])
         ->name('broker-accounts.toggle');
+
+    Route::resource('slave-accounts', SlaveAccountController::class)
+        ->only(['index', 'create', 'store', 'destroy']);
+    Route::patch('/slave-accounts/{slaveAccount}/toggle', [SlaveAccountController::class, 'toggle'])
+        ->name('slave-accounts.toggle');
+
+    Route::get('/broker-accounts/{brokerAccount}/copy-trade', [CopyTradeController::class, 'index'])
+        ->name('broker-accounts.copy-trade.index');
+    Route::post('/broker-accounts/{brokerAccount}/copy-trade', [CopyTradeController::class, 'copy'])
+        ->name('broker-accounts.copy-trade.copy');
 });
 
 require __DIR__.'/auth.php';

@@ -3,23 +3,23 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 
 const STATE_STYLES = {
-    deployed: 'bg-green-100 text-green-800',
-    deploying: 'bg-yellow-100 text-yellow-800',
+    deployed:   'bg-green-100 text-green-800',
+    deploying:  'bg-yellow-100 text-yellow-800',
     validating: 'bg-yellow-100 text-yellow-800',
-    pending: 'bg-gray-100 text-gray-600',
-    error: 'bg-red-100 text-red-800',
+    pending:    'bg-gray-100 text-gray-600',
+    error:      'bg-red-100 text-red-800',
 };
 
-export default function Index({ accounts }) {
+export default function Index({ slaves }) {
     const flash = usePage().props.flash ?? {};
 
-    const toggle = (account) => {
-        router.patch(route('broker-accounts.toggle', account.id), {}, { preserveScroll: true });
+    const toggle = (slave) => {
+        router.patch(route('slave-accounts.toggle', slave.id), {}, { preserveScroll: true });
     };
 
-    const destroy = (account) => {
-        if (confirm(`¿Desconectar la cuenta "${account.name}"? Se eliminará de MetaApi.`)) {
-            router.delete(route('broker-accounts.destroy', account.id), { preserveScroll: true });
+    const destroy = (slave) => {
+        if (confirm(`¿Desconectar la cuenta esclava "${slave.name}"? Se eliminará de MetaApi.`)) {
+            router.delete(route('slave-accounts.destroy', slave.id), { preserveScroll: true });
         }
     };
 
@@ -28,17 +28,17 @@ export default function Index({ accounts }) {
             header={
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <h2 className="text-xl font-semibold leading-tight text-gray-800">
-                        Cuentas de broker
+                        Cuentas esclavas
                     </h2>
-                    <Link href={route('broker-accounts.create')} className="sm:w-auto">
+                    <Link href={route('slave-accounts.create')}>
                         <PrimaryButton className="w-full justify-center sm:w-auto">
-                            Conectar cuenta
+                            Conectar esclava
                         </PrimaryButton>
                     </Link>
                 </div>
             }
         >
-            <Head title="Cuentas de broker" />
+            <Head title="Cuentas esclavas" />
 
             <div className="py-6 sm:py-12">
                 <div className="mx-auto max-w-5xl space-y-4 px-4 sm:px-6 lg:px-8">
@@ -47,64 +47,58 @@ export default function Index({ accounts }) {
                             {flash.success}
                         </div>
                     )}
-                    {flash.error && (
-                        <div className="rounded-md bg-red-50 p-4 text-sm text-red-800">
-                            {flash.error}
-                        </div>
-                    )}
 
-                    {accounts.length === 0 ? (
+                    {slaves.length === 0 ? (
                         <div className="rounded-lg bg-white p-6 text-gray-600 shadow-sm">
-                            Aún no has conectado ninguna cuenta. Conecta tu broker
-                            para que el sistema pueda operar automáticamente.
+                            Aún no has conectado ninguna cuenta esclava.{' '}
+                            <Link href={route('slave-accounts.create')} className="text-indigo-600 underline">
+                                Conecta una ahora
+                            </Link>
+                            .
                         </div>
                     ) : (
                         <div className="space-y-3">
-                            {accounts.map((account) => (
-                                <div
-                                    key={account.id}
-                                    className="rounded-lg bg-white p-4 shadow-sm sm:p-6"
-                                >
+                            {slaves.map((slave) => (
+                                <div key={slave.id} className="rounded-lg bg-white p-4 shadow-sm sm:p-6">
                                     <div className="flex flex-wrap items-start justify-between gap-3">
                                         <div className="min-w-0">
                                             <div className="font-medium text-gray-900">
-                                                {account.name}
+                                                {slave.name}
                                             </div>
                                             <div className="text-sm text-gray-500">
-                                                {account.platform.toUpperCase()} · {account.login} · {account.server}
+                                                {slave.platform.toUpperCase()} · {slave.login} · {slave.server}
+                                            </div>
+                                            <div className="mt-1 text-xs text-gray-400">
+                                                Maestra: <span className="font-medium text-gray-600">{slave.master?.name ?? '—'}</span>
+                                                {' · '}
+                                                Multiplicador: <span className="font-medium text-gray-600">{slave.lot_multiplier}×</span>
                                             </div>
                                         </div>
                                         <span
                                             className={
                                                 'inline-flex rounded-full px-3 py-1 text-xs font-semibold ' +
-                                                (STATE_STYLES[account.provision_state] ?? STATE_STYLES.pending)
+                                                (STATE_STYLES[slave.provision_state] ?? STATE_STYLES.pending)
                                             }
                                         >
-                                            {account.provision_state}
+                                            {slave.provision_state}
                                         </span>
                                     </div>
 
-                                    {account.last_error && (
+                                    {slave.last_error && (
                                         <div className="mt-3 break-words rounded bg-red-50 p-2 text-xs text-red-700">
-                                            {account.last_error}
+                                            {slave.last_error}
                                         </div>
                                     )}
 
                                     <div className="mt-4 flex items-center justify-end gap-4 border-t border-gray-100 pt-3 text-sm">
                                         <button
-                                            onClick={() => toggle(account)}
+                                            onClick={() => toggle(slave)}
                                             className="text-indigo-600 hover:text-indigo-900"
                                         >
-                                            {account.is_enabled ? 'Pausar' : 'Reanudar'}
+                                            {slave.is_enabled ? 'Pausar' : 'Reanudar'}
                                         </button>
-                                        <Link
-                                            href={route('broker-accounts.copy-trade.index', account.id)}
-                                            className="text-indigo-600 hover:text-indigo-900"
-                                        >
-                                            Copy Trading
-                                        </Link>
                                         <button
-                                            onClick={() => destroy(account)}
+                                            onClick={() => destroy(slave)}
                                             className="text-red-600 hover:text-red-900"
                                         >
                                             Desconectar
