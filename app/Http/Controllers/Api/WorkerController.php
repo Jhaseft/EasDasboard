@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\BotTrade;
 use App\Models\BrokerAccount;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 /**
  * Endpoints que consume el worker de Python (MetaApi). Protegido con la misma
@@ -44,5 +46,30 @@ class WorkerController extends Controller
             'count' => $accounts->count(),
             'accounts' => $accounts,
         ]);
+    }
+
+    /**
+     * Recibe el reporte del worker cuando intenta abrir una operacion.
+     * El worker manda: bot_id, status (opened|rejected_limits|failed) y, segun
+     * el caso, symbol/direction/position_id/SL/TP/error. Lo guardamos para que
+     * el usuario vea en el panel si la operacion entro o por que no.
+     */
+    public function trades(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'bot_id'            => ['required', 'integer', 'exists:bots,id'],
+            'broker_account_id' => ['nullable', 'integer', 'exists:broker_accounts,id'],
+            'symbol'            => ['required', 'string', 'max:50'],
+            'direction'         => ['nullable', 'in:buy,sell'],
+            'status'            => ['required', 'in:opened,rejected_limits,failed'],
+            'position_id'       => ['nullable', 'string', 'max:100'],
+            'requested_sl'      => ['nullable', 'numeric'],
+            'requested_tp'      => ['nullable', 'numeric'],
+            'error'             => ['nullable', 'string'],
+        ]);
+
+        $trade = BotTrade::create($data);
+
+        return response()->json(['ok' => true, 'id' => $trade->id], 201);
     }
 }

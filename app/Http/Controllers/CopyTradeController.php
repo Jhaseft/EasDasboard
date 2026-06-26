@@ -102,6 +102,44 @@ class CopyTradeController extends Controller
     }
 
     /**
+     * Cierra una posicion abierta de la cuenta (maestra) via MetaApi REST,
+     * dado el id de la posicion. Lo dispara el boton "Cerrar" del panel.
+     */
+    public function close(Request $request, BrokerAccount $brokerAccount): RedirectResponse
+    {
+        abort_unless($brokerAccount->user_id === $request->user()->id, 403);
+
+        $data = $request->validate([
+            'position_id' => ['required', 'string'],
+        ]);
+
+        if (! $brokerAccount->metaapi_account_id) {
+            return back()->with('error', 'La cuenta no esta provisionada en MetaApi.');
+        }
+
+        $token   = config('services.metaapi.token');
+        $baseUrl = 'https://mt-client-api-v1.' . ($brokerAccount->region ?? 'new-york') . '.agiliumtrade.ai';
+
+        try {
+            $response = Http::withHeaders([
+                'auth-token'   => $token,
+                'Content-Type' => 'application/json',
+            ])->post("{$baseUrl}/users/current/accounts/{$brokerAccount->metaapi_account_id}/trade", [
+                'actionType' => 'POSITION_CLOSE_ID',
+                'positionId' => $data['position_id'],
+            ]);
+        } catch (\Throwable $e) {
+            return back()->with('error', 'Error al cerrar la operacion: ' . $e->getMessage());
+        }
+
+        if ($response->failed()) {
+            return back()->with('error', 'MetaApi rechazo el cierre: ' . $response->body());
+        }
+
+        return back()->with('success', 'Operacion cerrada correctamente.');
+    }
+
+    /**
      * Abre una posicion en la cuenta esclava via MetaApi REST.
      */
     protected function openPositionOnSlave(SlaveAccount $slave, string $symbol, string $direction, float $lot): string

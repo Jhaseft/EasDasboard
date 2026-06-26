@@ -20,4 +20,6 @@ Route::middleware('api.key')->group(function () {
 
     // Worker de Python (MetaApi cloud): cuentas operables + bots activos.
     Route::get('/worker/accounts', [WorkerController::class, 'accounts'])->name('api.worker.accounts');
+    // El worker reporta cada intento de operacion (abierta / rechazada / fallida).
+    Route::post('/worker/trades', [WorkerController::class, 'trades'])->name('api.worker.trades');
 });

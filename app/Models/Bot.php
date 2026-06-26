@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Bot extends Model
 {
@@ -131,6 +132,14 @@ class Bot extends Model
     public function brokerAccount(): BelongsTo
     {
         return $this->belongsTo(BrokerAccount::class);
+    }
+
+    /**
+     * @return HasMany<BotTrade, $this>
+     */
+    public function botTrades(): HasMany
+    {
+        return $this->hasMany(BotTrade::class);
     }
 
     /**

@@ -52,6 +52,16 @@ export default function Index({ master, positions, slaves, history }) {
     const slaveLot = (slave) =>
         Math.max(((selectedPosition?.volume ?? 0) * slave.lot_multiplier).toFixed(2), 0.01);
 
+    const closePosition = (position) => {
+        if (!confirm(`¿Cerrar la operación ${position.symbol} (${position.volume} lot)?`)) return;
+
+        router.post(
+            route('broker-accounts.positions.close', master.id),
+            { position_id: position.id },
+            { preserveScroll: true }
+        );
+    };
+
     return (
         <AuthenticatedLayout
             header={
@@ -67,6 +77,11 @@ export default function Index({ master, positions, slaves, history }) {
                     {flash.success && (
                         <div className="rounded-md bg-green-50 p-4 text-sm text-green-800">
                             {flash.success}
+                        </div>
+                    )}
+                    {flash.error && (
+                        <div className="rounded-md bg-red-50 p-4 text-sm text-red-800">
+                            {flash.error}
                         </div>
                     )}
 
@@ -103,6 +118,12 @@ export default function Index({ master, positions, slaves, history }) {
                                                     Copiar a esclavas
                                                 </button>
                                             )}
+                                            <button
+                                                onClick={() => closePosition(pos)}
+                                                className="rounded-md bg-red-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-red-700"
+                                            >
+                                                Cerrar
+                                            </button>
                                         </div>
                                     </div>
                                 ))}
