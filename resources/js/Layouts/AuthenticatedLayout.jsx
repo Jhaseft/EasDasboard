@@ -42,6 +42,12 @@ export default function AuthenticatedLayout({ header, children }) {
                                 >
                                     Cuentas
                                 </NavLink>
+                                <NavLink
+                                    href={route('slave-accounts.index')}
+                                    active={route().current('slave-accounts.*')}
+                                >
+                                    Esclavas
+                                </NavLink>
                             </div>
                         </div>
 
@@ -157,6 +163,12 @@ export default function AuthenticatedLayout({ header, children }) {
                             active={route().current('broker-accounts.*')}
                         >
                             Cuentas
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink
+                            href={route('slave-accounts.index')}
+                            active={route().current('slave-accounts.*')}
+                        >
+                            Esclavas
                         </ResponsiveNavLink>
                     </div>
 

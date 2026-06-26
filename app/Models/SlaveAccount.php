@@ -2,18 +2,15 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class BrokerAccount extends Model
+class SlaveAccount extends Model
 {
-    /** @use HasFactory<\Database\Factories\BrokerAccountFactory> */
-    use HasFactory;
-
     protected $fillable = [
         'user_id',
+        'master_account_id',
         'name',
         'platform',
         'login',
@@ -24,12 +21,14 @@ class BrokerAccount extends Model
         'connection_status',
         'last_error',
         'is_enabled',
+        'lot_multiplier',
     ];
 
     protected function casts(): array
     {
         return [
-            'is_enabled' => 'boolean',
+            'is_enabled'      => 'boolean',
+            'lot_multiplier'  => 'decimal:4',
         ];
     }
 
@@ -38,30 +37,16 @@ class BrokerAccount extends Model
         return $this->belongsTo(User::class);
     }
 
-    /**
-     * @return HasMany<Bot, $this>
-     */
-    public function bots(): HasMany
+    public function master(): BelongsTo
     {
-        return $this->hasMany(Bot::class);
+        return $this->belongsTo(BrokerAccount::class, 'master_account_id');
     }
 
-    /**
-     * @return HasMany<SlaveAccount, $this>
-     */
-    public function slaveAccounts(): HasMany
+    public function copiedTrades(): HasMany
     {
-        return $this->hasMany(SlaveAccount::class, 'master_account_id');
+        return $this->hasMany(CopiedTrade::class);
     }
 
-    public function isMaster(): bool
-    {
-        return $this->slaveAccounts()->exists();
-    }
-
-    /**
-     * Lista para que el worker pueda operar: provisionada y habilitada.
-     */
     public function isOperable(): bool
     {
         return $this->is_enabled
