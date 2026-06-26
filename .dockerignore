@@ -1,0 +1,25 @@
+# Secretos: NUNCA dentro de la imagen. En producción las variables se inyectan
+# desde el hosting (Coolify/Railway/Render), no desde un .env copiado.
+.env
+.env.*
+!.env.example
+
+# Dependencias: se reinstalan dentro de la imagen (composer/npm). Copiar las de
+# Windows a una imagen Linux rompe binarios nativos.
+node_modules
+vendor
+
+# Control de versiones y CI.
+.git
+.github
+.gitignore
+.gitattributes
+
+# Artefactos locales y caches que no deben viajar a la imagen.
+storage/logs/*
+storage/framework/cache/data/*
+storage/framework/sessions/*
+storage/framework/views/*
+public/hot
+tests
+.phpunit.result.cache

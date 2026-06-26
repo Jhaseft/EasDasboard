@@ -10,6 +10,7 @@ RUN apt-get update && apt-get install -y \
     curl \
     ca-certificates \
     gnupg \
+    supervisor \
     libzip-dev \
     libonig-dev \
     libpng-dev \
@@ -78,4 +79,6 @@ RUN chown -R www-data:www-data storage bootstrap/cache \
 # Exponer puerto
 EXPOSE 8080
 
-CMD ["sh", "-c", "php -S 0.0.0.0:${PORT:-8080} -t public"]
+# Arranca el panel web Y el queue worker juntos (vía supervisor). El entrypoint
+# migra la BD y cachea config antes de levantar todo.
+CMD ["sh", "/var/www/html/docker/entrypoint.sh"]

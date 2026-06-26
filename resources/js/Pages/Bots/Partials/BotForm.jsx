@@ -5,6 +5,7 @@ import PrimaryButton from '@/Components/PrimaryButton';
 import TextInput from '@/Components/TextInput';
 import { Link } from '@inertiajs/react';
 import StrategyAsianBreakout from './StrategyAsianBreakout';
+import StrategyMultiTfOrderFlow from './StrategyMultiTfOrderFlow';
 
 const directionOptions = [
     { value: 'both', label: 'Ambos (compra y venta)' },
@@ -17,6 +18,7 @@ const timeframeOptions = ['M1', 'M5', 'M10', 'M15', 'M30', 'H1', 'H4', 'D1'];
 const strategyOptions = [
     { value: 'simple', label: 'Simple (dirección fija, una por vela)' },
     { value: 'asian_breakout', label: 'Asian Range Breakout (prop firm)' },
+    { value: 'multitf_orderflow', label: 'Multi-TF Order Flow + IA (bot Python)' },
 ];
 
 export default function BotForm({
@@ -170,7 +172,23 @@ export default function BotForm({
                 </section>
             )}
 
-            {data.strategy === 'simple' && (
+            {data.strategy === 'multitf_orderflow' && (
+                <section className="space-y-4 border-t border-gray-100 pt-6">
+                    <h3 className="text-sm font-semibold uppercase tracking-wide text-gray-500">
+                        Parámetros · Multi-TF Order Flow + IA
+                    </h3>
+                    <p className="text-xs text-gray-500">
+                        El símbolo se toma del primer par de arriba; lotaje, SL, TP y
+                        máx. operaciones se editan en la sección «Cómo abre la operación».
+                    </p>
+                    <StrategyMultiTfOrderFlow
+                        params={data.parameters || {}}
+                        setParam={setParam}
+                    />
+                </section>
+            )}
+
+            {(data.strategy === 'simple' || data.strategy === 'multitf_orderflow') && (
             <>
             <section className="space-y-4 border-t border-gray-100 pt-6">
                 <h3 className="text-sm font-semibold uppercase tracking-wide text-gray-500">

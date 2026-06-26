@@ -84,6 +84,28 @@ class Bot extends Model
                 'min_free_margin_pct' => 20.0,
                 'remove_ea_on_dd' => true,
             ],
+            'multitf_orderflow' => [
+                // Modo de ejecucion
+                'live_mode' => false,
+                // Tendencia multi-timeframe
+                'ema_trend_period' => 50,
+                // Order flow / liquidez en M5
+                'of_volume_sma_period' => 20,
+                'of_volume_multiplier' => 1.5,
+                'of_min_body_ratio' => 0.60,
+                // Gestion de riesgo
+                'max_open_positions' => 3,
+                // Motor de simulacion / re-optimizacion
+                'reoptimize_every_n_cycles' => 12,
+                'n_variants' => 6,
+                'sim_lookback_bars' => 500,
+                // Metrica IA
+                'ai_train_lookback_bars' => 500,
+                'ai_label_horizon_bars' => 6,
+                // NLP / noticias
+                'nlp_block_confidence' => 0.70,
+                'nlp_neutral_when_no_headlines' => true,
+            ],
             default => [],
         };
     }
