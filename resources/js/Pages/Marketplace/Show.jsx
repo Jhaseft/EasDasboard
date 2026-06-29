@@ -5,7 +5,20 @@ import TextInput from '@/Components/TextInput';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
 
-export default function Show({ master, subscribed, balance, regions }) {
+function Metric({ label, value, suffix = '', tone }) {
+    return (
+        <div className="rounded-md bg-gray-50 p-3 text-center">
+            <div className={'text-lg font-bold ' + (tone ?? 'text-gray-900')}>
+                {value ?? '—'}{value != null ? suffix : ''}
+            </div>
+            <div className="text-xs text-gray-500">{label}</div>
+        </div>
+    );
+}
+
+const num = (v, d = 2) => (v == null ? null : Number(v).toFixed(d));
+
+export default function Show({ master, subscribed, balance, regions, stats, trades = [] }) {
     const { data, setData, post, processing, errors } = useForm({
         name: '',
         platform: 'mt5',
@@ -56,10 +69,88 @@ export default function Show({ master, subscribed, balance, regions }) {
                         {master.description && (
                             <p className="mt-3 text-sm text-gray-600">{master.description}</p>
                         )}
-                        <p className="mt-3 text-xs text-gray-400">
-                            Las estadísticas auditadas de rendimiento se mostrarán aquí (próxima fase).
-                        </p>
                     </div>
+
+                    {/* Estadísticas auditadas (directo del bróker vía MetaApi) */}
+                    <div className="rounded-lg bg-white p-6 shadow-sm">
+                        <div className="mb-3 flex items-center justify-between">
+                            <span className="text-sm font-medium text-gray-700">Rendimiento auditado</span>
+                            <span className="text-xs text-gray-400">Datos reales del bróker · no editables</span>
+                        </div>
+
+                        {stats ? (
+                            <>
+                                <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                                    <Metric label="Ganancia total" value={num(stats.gain)} suffix="%"
+                                        tone={stats.gain >= 0 ? 'text-green-600' : 'text-red-600'} />
+                                    <Metric label="Drawdown máx." value={num(stats.max_drawdown)} suffix="%" tone="text-red-600" />
+                                    <Metric label="Profit Factor" value={num(stats.profit_factor)} />
+                                    <Metric label="% Aciertos" value={num(stats.win_rate, 1)} suffix="%" />
+                                    <Metric label="Operaciones" value={stats.trades} />
+                                    <Metric label="Ganancia mensual" value={num(stats.monthly_gain)} suffix="%"
+                                        tone={stats.monthly_gain >= 0 ? 'text-green-600' : 'text-red-600'} />
+                                </div>
+                                {!stats.incognito && stats.balance != null && (
+                                    <div className="mt-3 text-xs text-gray-500">
+                                        Balance: ${num(stats.balance)} · Equity: ${num(stats.equity)} · P/L: ${num(stats.profit)}
+                                    </div>
+                                )}
+                            </>
+                        ) : (
+                            <p className="text-sm text-gray-500">
+                                Estadísticas aún no disponibles (la cuenta debe estar conectada y con
+                                historial). Se actualizan cada pocos minutos.
+                            </p>
+                        )}
+                    </div>
+
+                    {/* Historial de operaciones */}
+                    {trades.length > 0 && (
+                        <div className="rounded-lg bg-white p-6 shadow-sm">
+                            <div className="mb-3 text-sm font-medium text-gray-700">
+                                Últimas operaciones
+                            </div>
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-sm">
+                                    <thead>
+                                        <tr className="text-left text-xs text-gray-400">
+                                            <th className="pb-2">Fecha</th>
+                                            <th className="pb-2">Símbolo</th>
+                                            <th className="pb-2">Tipo</th>
+                                            <th className="pb-2 text-right">Vol.</th>
+                                            <th className="pb-2 text-right">Resultado</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-gray-100">
+                                        {trades.map((t, i) => (
+                                            <tr key={i}>
+                                                <td className="py-2 text-gray-500">
+                                                    {t.close_time ? String(t.close_time).slice(0, 10) : '—'}
+                                                </td>
+                                                <td className="py-2 font-medium text-gray-800">{t.symbol}</td>
+                                                <td className="py-2">
+                                                    <span className={
+                                                        'rounded px-1.5 py-0.5 text-xs font-medium ' +
+                                                        (t.type === 'buy' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700')
+                                                    }>
+                                                        {t.type}
+                                                    </span>
+                                                </td>
+                                                <td className="py-2 text-right text-gray-600">{t.volume}</td>
+                                                <td className={'py-2 text-right font-medium ' +
+                                                    (t.success === 'won' ? 'text-green-600' : 'text-red-600')}>
+                                                    {t.gain != null ? `${Number(t.gain).toFixed(2)}%` : '—'}
+                                                    {t.profit != null && (
+                                                        <span className="ml-1 text-xs text-gray-400">(${Number(t.profit).toFixed(2)})</span>
+                                                    )}
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    )}
 
                     {master.is_own ? (
                         <div className="rounded-lg bg-yellow-50 p-4 text-sm text-yellow-800">

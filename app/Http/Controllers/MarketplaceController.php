@@ -6,6 +6,7 @@ use App\Exceptions\InsufficientFundsException;
 use App\Jobs\ProvisionSlaveAccount;
 use App\Models\BrokerAccount;
 use App\Models\MarketplaceSubscription;
+use App\Services\MetaApi\MetaStats;
 use App\Services\Wallet\MarketplaceBilling;
 use App\Services\Wallet\PlatformBilling;
 use App\Services\Wallet\WalletService;
@@ -61,7 +62,7 @@ class MarketplaceController extends Controller
         ]);
     }
 
-    public function show(Request $request, BrokerAccount $master): Response
+    public function show(Request $request, BrokerAccount $master, MetaStats $metaStats): Response
     {
         abort_unless($master->is_public, 404);
 
@@ -71,6 +72,9 @@ class MarketplaceController extends Controller
             ->where('master_account_id', $master->id)
             ->where('status', 'active')
             ->exists();
+
+        // Estadísticas auditadas + historial real desde MetaApi (no editables).
+        $stats = $metaStats->publicStats($master);
 
         return Inertia::render('Marketplace/Show', [
             'master' => [
@@ -83,10 +87,13 @@ class MarketplaceController extends Controller
                 'profit_share_pct'   => (float) $master->profit_share_pct,
                 'followers_count'    => $master->followers_count,
                 'is_own'             => $master->user_id === $request->user()->id,
+                'show_balance'       => (bool) $master->show_balance,
             ],
             'subscribed' => $subscribed,
             'balance'    => (float) $this->wallets->walletFor($request->user())->balance,
             'regions'    => ['new-york', 'london', 'singapore'],
+            'stats'      => $stats['metrics'] ?? null,
+            'trades'     => $stats['trades'] ?? [],
         ]);
     }
 
