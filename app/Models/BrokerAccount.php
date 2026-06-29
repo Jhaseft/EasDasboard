@@ -19,6 +19,8 @@ class BrokerAccount extends Model
         'login',
         'server',
         'metaapi_account_id',
+        'webhook_token',
+        'ingest_mode',
         'region',
         'provision_state',
         'connection_status',
@@ -52,6 +54,22 @@ class BrokerAccount extends Model
     public function slaveAccounts(): HasMany
     {
         return $this->hasMany(SlaveAccount::class, 'master_account_id');
+    }
+
+    /**
+     * @return HasMany<Signal, $this>
+     */
+    public function signals(): HasMany
+    {
+        return $this->hasMany(Signal::class);
+    }
+
+    /**
+     * ¿Esta cuenta acepta señales por webhook?
+     */
+    public function acceptsWebhook(): bool
+    {
+        return in_array($this->ingest_mode, ['webhook', 'both'], true);
     }
 
     public function isMaster(): bool

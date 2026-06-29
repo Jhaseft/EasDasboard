@@ -22,13 +22,18 @@ class SlaveAccount extends Model
         'last_error',
         'is_enabled',
         'lot_multiplier',
+        'auto_copy',
+        'copy_mode',
+        'fixed_lot',
     ];
 
     protected function casts(): array
     {
         return [
             'is_enabled'      => 'boolean',
+            'auto_copy'       => 'boolean',
             'lot_multiplier'  => 'decimal:4',
+            'fixed_lot'       => 'decimal:2',
         ];
     }
 

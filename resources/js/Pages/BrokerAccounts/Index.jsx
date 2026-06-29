@@ -23,6 +23,19 @@ export default function Index({ accounts }) {
         }
     };
 
+    const webhookUrl = (account) =>
+        `${window.location.origin}/api/webhook/${account.webhook_token}`;
+
+    const copyWebhook = (account) => {
+        navigator.clipboard?.writeText(webhookUrl(account));
+    };
+
+    const regenerateWebhook = (account) => {
+        if (confirm('¿Regenerar el token? La URL actual del webhook dejará de funcionar.')) {
+            router.patch(route('broker-accounts.regenerate-webhook', account.id), {}, { preserveScroll: true });
+        }
+    };
+
     return (
         <AuthenticatedLayout
             header={
@@ -87,6 +100,35 @@ export default function Index({ accounts }) {
                                     {account.last_error && (
                                         <div className="mt-3 break-words rounded bg-red-50 p-2 text-xs text-red-700">
                                             {account.last_error}
+                                        </div>
+                                    )}
+
+                                    {account.webhook_token && (
+                                        <div className="mt-3 rounded-md border border-gray-200 bg-gray-50 p-3">
+                                            <div className="text-xs font-medium text-gray-700">
+                                                Webhook (TradingView / MT5 / Python)
+                                            </div>
+                                            <div className="mt-1 flex flex-wrap items-center gap-2">
+                                                <code className="min-w-0 flex-1 truncate rounded bg-white px-2 py-1 text-xs text-gray-600 ring-1 ring-gray-200">
+                                                    {webhookUrl(account)}
+                                                </code>
+                                                <button
+                                                    onClick={() => copyWebhook(account)}
+                                                    className="text-xs font-medium text-indigo-600 hover:text-indigo-900"
+                                                >
+                                                    Copiar
+                                                </button>
+                                                <button
+                                                    onClick={() => regenerateWebhook(account)}
+                                                    className="text-xs font-medium text-gray-500 hover:text-gray-800"
+                                                >
+                                                    Regenerar
+                                                </button>
+                                            </div>
+                                            <p className="mt-1 text-xs text-gray-500">
+                                                Envía un POST con JSON:{' '}
+                                                <code className="text-gray-600">{'{ "action": "buy", "symbol": "EURUSD", "volume": 0.1 }'}</code>
+                                            </p>
                                         </div>
                                     )}
 

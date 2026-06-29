@@ -31,12 +31,6 @@ export default function AuthenticatedLayout({ header, children }) {
                                     Dashboard
                                 </NavLink>
                                 <NavLink
-                                    href={route('bots.index')}
-                                    active={route().current('bots.*')}
-                                >
-                                    Bots
-                                </NavLink>
-                                <NavLink
                                     href={route('broker-accounts.index')}
                                     active={route().current('broker-accounts.*')}
                                 >
@@ -151,12 +145,6 @@ export default function AuthenticatedLayout({ header, children }) {
                             active={route().current('dashboard')}
                         >
                             Dashboard
-                        </ResponsiveNavLink>
-                        <ResponsiveNavLink
-                            href={route('bots.index')}
-                            active={route().current('bots.*')}
-                        >
-                            Bots
                         </ResponsiveNavLink>
                         <ResponsiveNavLink
                             href={route('broker-accounts.index')}

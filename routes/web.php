@@ -19,12 +19,16 @@ Route::get('/', function () {
 });
 
 Route::get('/dashboard', function (\Illuminate\Http\Request $request) {
-    $bots = $request->user()->bots();
+    $user = $request->user();
+    $brokers = $user->brokerAccounts();
+    $slaves = $user->slaveAccounts();
 
     return Inertia::render('Dashboard', [
         'stats' => [
-            'total' => (clone $bots)->count(),
-            'active' => (clone $bots)->where('is_active', true)->count(),
+            'brokers' => (clone $brokers)->count(),
+            'brokers_active' => (clone $brokers)->where('is_enabled', true)->count(),
+            'slaves' => (clone $slaves)->count(),
+            'slaves_auto' => (clone $slaves)->where('auto_copy', true)->count(),
         ],
     ]);
 })->middleware(['auth', 'verified'])->name('dashboard');
@@ -41,6 +45,8 @@ Route::middleware('auth')->group(function () {
         ->only(['index', 'create', 'store', 'destroy']);
     Route::patch('/broker-accounts/{brokerAccount}/toggle', [BrokerAccountController::class, 'toggle'])
         ->name('broker-accounts.toggle');
+    Route::patch('/broker-accounts/{brokerAccount}/regenerate-webhook', [BrokerAccountController::class, 'regenerateWebhook'])
+        ->name('broker-accounts.regenerate-webhook');
 
     Route::resource('slave-accounts', SlaveAccountController::class)
         ->only(['index', 'create', 'store', 'destroy']);

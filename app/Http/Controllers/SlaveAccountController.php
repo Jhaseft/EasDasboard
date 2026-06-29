@@ -17,7 +17,7 @@ class SlaveAccountController extends Controller
         $slaves = $request->user()->slaveAccounts()
             ->with('master:id,name')
             ->latest()
-            ->get(['id', 'master_account_id', 'name', 'platform', 'login', 'server', 'provision_state', 'connection_status', 'is_enabled', 'last_error', 'lot_multiplier']);
+            ->get(['id', 'master_account_id', 'name', 'platform', 'login', 'server', 'provision_state', 'connection_status', 'is_enabled', 'last_error', 'lot_multiplier', 'auto_copy', 'copy_mode', 'fixed_lot']);
 
         return Inertia::render('SlaveAccounts/Index', [
             'slaves' => $slaves,
@@ -46,6 +46,9 @@ class SlaveAccountController extends Controller
             'password'          => ['required', 'string', 'max:255'],
             'region'            => ['nullable', 'string', 'max:50'],
             'lot_multiplier'    => ['nullable', 'numeric', 'min:0.0001', 'max:999'],
+            'auto_copy'         => ['nullable', 'boolean'],
+            'copy_mode'         => ['nullable', 'in:multiplier,fixed'],
+            'fixed_lot'         => ['nullable', 'numeric', 'min:0.01', 'max:999'],
         ]);
 
         // Validar que la cuenta maestra pertenezca al usuario
@@ -62,6 +65,9 @@ class SlaveAccountController extends Controller
             'server'            => $data['server'],
             'region'            => $data['region'] ?? config('services.metaapi.region'),
             'lot_multiplier'    => $data['lot_multiplier'] ?? 1.0,
+            'auto_copy'         => $data['auto_copy'] ?? true,
+            'copy_mode'         => $data['copy_mode'] ?? 'multiplier',
+            'fixed_lot'         => $data['fixed_lot'] ?? null,
             'provision_state'   => 'validating',
         ]);
 

@@ -7,6 +7,7 @@ use App\Models\BrokerAccount;
 use App\Services\MetaApi\MetaApiProvisioning;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -16,7 +17,7 @@ class BrokerAccountController extends Controller
     {
         $accounts = $request->user()->brokerAccounts()
             ->latest()
-            ->get(['id', 'name', 'platform', 'login', 'server', 'provision_state', 'connection_status', 'is_enabled', 'last_error']);
+            ->get(['id', 'name', 'platform', 'login', 'server', 'provision_state', 'connection_status', 'is_enabled', 'last_error', 'webhook_token', 'ingest_mode']);
 
         return Inertia::render('BrokerAccounts/Index', [
             'accounts' => $accounts,
@@ -47,6 +48,7 @@ class BrokerAccountController extends Controller
             'login' => $data['login'],
             'server' => $data['server'],
             'region' => $data['region'] ?? config('services.metaapi.region'),
+            'webhook_token' => Str::random(48),
             'provision_state' => 'validating',
         ]);
 
@@ -65,6 +67,18 @@ class BrokerAccountController extends Controller
         $brokerAccount->update(['is_enabled' => ! $brokerAccount->is_enabled]);
 
         return back();
+    }
+
+    /**
+     * Regenera el token del webhook (invalida la URL anterior).
+     */
+    public function regenerateWebhook(Request $request, BrokerAccount $brokerAccount): RedirectResponse
+    {
+        $this->authorizeAccount($request, $brokerAccount);
+
+        $brokerAccount->update(['webhook_token' => Str::random(48)]);
+
+        return back()->with('success', 'Token del webhook regenerado. La URL anterior dejó de funcionar.');
     }
 
     public function destroy(Request $request, BrokerAccount $brokerAccount, MetaApiProvisioning $metaapi): RedirectResponse
