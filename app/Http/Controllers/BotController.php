@@ -17,8 +17,16 @@ class BotController extends Controller
             ->latest()
             ->get();
 
+        // Ultimos reportes que mando el worker (operaciones abiertas/rechazadas).
+        $reports = \App\Models\BotTrade::whereIn('bot_id', $bots->pluck('id'))
+            ->with('bot:id,name')
+            ->latest()
+            ->take(30)
+            ->get(['id', 'bot_id', 'symbol', 'direction', 'status', 'error', 'created_at']);
+
         return Inertia::render('Bots/Index', [
             'bots' => $bots,
+            'reports' => $reports,
         ]);
     }
 

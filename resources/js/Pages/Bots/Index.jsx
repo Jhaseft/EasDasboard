@@ -2,7 +2,19 @@ import PrimaryButton from '@/Components/PrimaryButton';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 
-export default function Index({ bots }) {
+const REPORT_STYLES = {
+    opened:          'bg-green-100 text-green-800',
+    rejected_limits: 'bg-red-100 text-red-800',
+    failed:          'bg-orange-100 text-orange-800',
+};
+
+const REPORT_LABELS = {
+    opened:          'Abierta',
+    rejected_limits: 'Fuera de límites',
+    failed:          'Error',
+};
+
+export default function Index({ bots, reports = [] }) {
     const flash = usePage().props.flash ?? {};
 
     const toggle = (bot) => {
@@ -194,6 +206,51 @@ export default function Index({ bots }) {
                                 </div>
                             </div>
                         </>
+                    )}
+
+                    {/* Avisos del worker: operaciones abiertas / rechazadas */}
+                    {reports.length > 0 && (
+                        <div className="overflow-hidden rounded-lg bg-white shadow-sm">
+                            <div className="border-b border-gray-100 px-6 py-4">
+                                <h3 className="font-semibold text-gray-800">
+                                    Últimas operaciones y avisos
+                                </h3>
+                                <p className="mt-1 text-xs text-gray-500">
+                                    Reportes que envía el bot al intentar abrir cada operación.
+                                </p>
+                            </div>
+                            <div className="divide-y divide-gray-100">
+                                {reports.map((r) => (
+                                    <div
+                                        key={r.id}
+                                        className="flex flex-wrap items-center justify-between gap-2 px-6 py-3 text-sm"
+                                    >
+                                        <div className="flex flex-wrap items-center gap-3">
+                                            <span className="font-medium text-gray-900">
+                                                {r.bot?.name ?? `Bot #${r.bot_id}`}
+                                            </span>
+                                            <span className="text-gray-700">{r.symbol}</span>
+                                            {r.direction && (
+                                                <span className={`rounded px-2 py-0.5 text-xs font-semibold ${r.direction === 'buy' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                                                    {r.direction.toUpperCase()}
+                                                </span>
+                                            )}
+                                            {r.error && (
+                                                <span className="text-xs text-gray-500">{r.error}</span>
+                                            )}
+                                        </div>
+                                        <div className="flex items-center gap-3">
+                                            <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${REPORT_STYLES[r.status] ?? 'bg-gray-100 text-gray-600'}`}>
+                                                {REPORT_LABELS[r.status] ?? r.status}
+                                            </span>
+                                            <span className="text-xs text-gray-400">
+                                                {new Date(r.created_at).toLocaleString()}
+                                            </span>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
                     )}
                 </div>
             </div>

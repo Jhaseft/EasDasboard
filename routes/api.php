@@ -33,4 +33,7 @@ Route::middleware('api.key')->group(function () {
     // Copy-trading automático: el worker lee las maestras/esclavas y reporta copias.
     Route::get('/worker/copy-accounts', [WorkerController::class, 'copyAccounts'])->name('api.worker.copy-accounts');
     Route::post('/worker/copy-trades', [WorkerController::class, 'reportCopyTrades'])->name('api.worker.copy-trades');
+
+    // El worker reporta cada intento de operacion (abierta / rechazada / fallida).
+    Route::post('/worker/trades', [WorkerController::class, 'trades'])->name('api.worker.trades');
 });

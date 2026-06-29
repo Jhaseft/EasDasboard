@@ -57,6 +57,8 @@ Route::middleware('auth')->group(function () {
         ->name('broker-accounts.copy-trade.index');
     Route::post('/broker-accounts/{brokerAccount}/copy-trade', [CopyTradeController::class, 'copy'])
         ->name('broker-accounts.copy-trade.copy');
+    Route::post('/broker-accounts/{brokerAccount}/positions/close', [CopyTradeController::class, 'close'])
+        ->name('broker-accounts.positions.close');
 });
 
 require __DIR__.'/auth.php';
