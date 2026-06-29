@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Exceptions\InsufficientFundsException;
 use App\Jobs\ProvisionSlaveAccount;
 use App\Models\BrokerAccount;
 use App\Models\MarketplaceSubscription;
 use App\Services\Wallet\MarketplaceBilling;
+use App\Services\Wallet\PlatformBilling;
 use App\Services\Wallet\WalletService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -17,6 +19,7 @@ class MarketplaceController extends Controller
     public function __construct(
         protected WalletService $wallets,
         protected MarketplaceBilling $billing,
+        protected PlatformBilling $platform,
     ) {}
 
     public function index(Request $request): Response
@@ -117,12 +120,15 @@ class MarketplaceController extends Controller
             'fixed_lot'      => ['nullable', 'numeric', 'min:0.01', 'max:999', 'required_if:copy_mode,fixed'],
         ]);
 
-        // Cobro por adelantado del primer periodo: validar saldo antes de crear nada.
+        // Cobro por adelantado: cuota del marketplace + $7 de la cuenta conectada.
         $amount = $master->pricing_model === 'subscription' ? (float) $master->subscription_price : 0.0;
+        $accountFee = (float) config('billing.account_fee');
+        $upfront = $amount + $accountFee;
         $wallet = $this->wallets->walletFor($user);
-        if ($amount > 0 && ! $wallet->hasFunds($amount)) {
+        if (! $wallet->hasFunds($upfront)) {
             return back()->withErrors([
-                'amount' => 'Saldo insuficiente. Recarga tu billetera (necesitas $'.number_format($amount, 2).').',
+                'amount' => 'Saldo insuficiente. Necesitas $'.number_format($upfront, 2)
+                    .' (cuota $'.number_format($amount, 2).' + $'.number_format($accountFee, 2).' de la cuenta).',
             ]);
         }
 
@@ -139,6 +145,15 @@ class MarketplaceController extends Controller
             'fixed_lot'         => $data['fixed_lot'] ?? null,
             'provision_state'   => 'validating',
         ]);
+
+        // Cobra los $7/mes de la cuenta conectada (esclava).
+        try {
+            $this->platform->subscribeAccount($slave);
+        } catch (InsufficientFundsException) {
+            $slave->delete();
+
+            return back()->withErrors(['amount' => 'Saldo insuficiente para conectar la cuenta.']);
+        }
 
         $sub = MarketplaceSubscription::create([
             'subscriber_id'     => $user->id,

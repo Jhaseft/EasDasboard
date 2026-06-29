@@ -2,7 +2,7 @@
 
 namespace App\Console\Commands;
 
-use App\Models\User;
+use App\Models\PlatformSubscription;
 use App\Services\Wallet\PlatformBilling;
 use Illuminate\Console\Command;
 
@@ -10,24 +10,22 @@ class ChargePlatformFees extends Command
 {
     protected $signature = 'billing:charge-platform';
 
-    protected $description = 'Cobra la tarifa mensual de plataforma ($7/cuenta + módulo webhook) a cada usuario';
+    protected $description = 'Renueva las suscripciones de plataforma ($7/cuenta + módulo webhook) cuyo periodo venció';
 
     public function handle(PlatformBilling $billing): int
     {
+        $due = PlatformSubscription::whereIn('status', ['active', 'past_due'])
+            ->where('next_charge_at', '<=', now())
+            ->get();
+
         $charged = 0;
-        $skipped = 0;
+        $failed = 0;
 
-        User::query()->chunkById(100, function ($users) use ($billing, &$charged, &$skipped) {
-            foreach ($users as $user) {
-                if ($billing->chargeMonthly($user)) {
-                    $charged++;
-                } else {
-                    $skipped++;
-                }
-            }
-        });
+        foreach ($due as $sub) {
+            $billing->renew($sub) ? $charged++ : $failed++;
+        }
 
-        $this->info("Plataforma cobrada a {$charged} usuario(s) | sin cobro: {$skipped}");
+        $this->info("Suscripciones de plataforma procesadas: {$due->count()} | cobradas: {$charged} | sin saldo: {$failed}");
 
         return self::SUCCESS;
     }

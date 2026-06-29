@@ -2,9 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Exceptions\InsufficientFundsException;
 use App\Jobs\ProvisionBrokerAccount;
 use App\Models\BrokerAccount;
 use App\Services\MetaApi\MetaApiProvisioning;
+use App\Services\Wallet\PlatformBilling;
+use App\Services\Wallet\WalletService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -13,7 +16,7 @@ use Inertia\Response;
 
 class BrokerAccountController extends Controller
 {
-    public function index(Request $request): Response
+    public function index(Request $request, PlatformBilling $billing): Response
     {
         $accounts = $request->user()->brokerAccounts()
             ->withCount(['subscriptions as followers_count' => fn ($q) => $q->where('status', 'active')])
@@ -27,6 +30,8 @@ class BrokerAccountController extends Controller
 
         return Inertia::render('BrokerAccounts/Index', [
             'accounts' => $accounts,
+            'webhookModuleActive' => $billing->hasWebhookModule($request->user()),
+            'webhookModuleFee' => (float) config('billing.webhook_module_fee'),
         ]);
     }
 
@@ -37,7 +42,7 @@ class BrokerAccountController extends Controller
         ]);
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request, PlatformBilling $billing, WalletService $wallets): RedirectResponse
     {
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
@@ -47,6 +52,14 @@ class BrokerAccountController extends Controller
             'password' => ['required', 'string', 'max:255'], // se manda a MetaApi, NO se guarda
             'region' => ['nullable', 'string', 'max:50'],
         ]);
+
+        // Conectar una cuenta cuesta $7/mes: cobramos el primer mes al instante.
+        $fee = (float) config('billing.account_fee');
+        if (! $wallets->walletFor($request->user())->hasFunds($fee)) {
+            return back()->withErrors([
+                'balance' => "Saldo insuficiente. Conectar una cuenta cuesta \${$fee}/mes. Recarga tu billetera.",
+            ]);
+        }
 
         $account = $request->user()->brokerAccounts()->create([
             'name' => $data['name'],
@@ -58,12 +71,20 @@ class BrokerAccountController extends Controller
             'provision_state' => 'validating',
         ]);
 
+        try {
+            $billing->subscribeAccount($account);
+        } catch (InsufficientFundsException) {
+            $account->delete();
+
+            return back()->withErrors(['balance' => 'Saldo insuficiente para conectar la cuenta.']);
+        }
+
         // La validacion + deploy en MetaApi puede tardar 1-2 min: a la cola.
         ProvisionBrokerAccount::dispatch($account, $data['password']);
 
         return redirect()
             ->route('broker-accounts.index')
-            ->with('success', 'Cuenta en validacion con MetaApi. El estado se actualizara en unos minutos.');
+            ->with('success', "Cuenta conectada (se cobró \${$fee}/mes). En validación con MetaApi; el estado se actualizará en unos minutos.");
     }
 
     public function toggle(Request $request, BrokerAccount $brokerAccount): RedirectResponse
@@ -119,9 +140,12 @@ class BrokerAccountController extends Controller
             : 'Cuenta retirada del marketplace.');
     }
 
-    public function destroy(Request $request, BrokerAccount $brokerAccount, MetaApiProvisioning $metaapi): RedirectResponse
+    public function destroy(Request $request, BrokerAccount $brokerAccount, MetaApiProvisioning $metaapi, PlatformBilling $billing): RedirectResponse
     {
         $this->authorizeAccount($request, $brokerAccount);
+
+        // Al desconectar deja de cobrarse la tarifa mensual de esta cuenta.
+        $billing->cancelAccount($brokerAccount);
 
         if ($brokerAccount->metaapi_account_id) {
             try {

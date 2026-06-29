@@ -70,8 +70,8 @@ it('suscribirse cobra al seguidor y paga al proveedor menos el take rate', funct
         ])
         ->assertRedirect(route('marketplace.index'));
 
-    // Seguidor: 100 - 30 = 70. Proveedor: 30 - 15% = 25.5.
-    expect((float) $svc->walletFor($follower)->fresh()->balance)->toBe(70.0);
+    // Seguidor: 100 - 30 (cuota) - 7 (cuenta conectada) = 63. Proveedor: 30 - 15% = 25.5.
+    expect((float) $svc->walletFor($follower)->fresh()->balance)->toBe(63.0);
     expect((float) $svc->walletFor($provider)->fresh()->balance)->toBe(25.5);
 
     expect(MarketplaceSubscription::where('subscriber_id', $follower->id)->where('status', 'active')->count())->toBe(1);
@@ -95,28 +95,37 @@ it('rechaza suscribirse sin saldo suficiente', function () {
     Queue::assertNothingPushed();
 });
 
-it('calcula y cobra la tarifa de plataforma ($7/cuenta + webhook)', function () {
+it('cobra $7 al conectar cada cuenta y $15 por el módulo webhook', function () {
     config(['billing.account_fee' => 7, 'billing.webhook_module_fee' => 15]);
 
+    $svc = app(WalletService::class);
+    $billing = app(\App\Services\Wallet\PlatformBilling::class);
+
     $user = User::factory()->create();
-    // 1 cuenta de bróker con webhook + 1 esclava = 2 cuentas.
-    $user->brokerAccounts()->create([
-        'name' => 'M', 'platform' => 'mt5', 'login' => '1', 'server' => 'D',
-        'is_enabled' => true, 'ingest_mode' => 'both',
+    $svc->deposit($svc->walletFor($user), 100);
+
+    // Conecta 1 bróker + 1 esclava (cobra 7 + 7) y activa el módulo (15).
+    $master = $user->brokerAccounts()->create([
+        'name' => 'M', 'platform' => 'mt5', 'login' => '1', 'server' => 'D', 'is_enabled' => true,
     ]);
-    $master = $user->brokerAccounts()->first();
-    $user->slaveAccounts()->create([
+    $billing->subscribeAccount($master);
+
+    $slave = $user->slaveAccounts()->create([
         'master_account_id' => $master->id, 'name' => 'S', 'platform' => 'mt5',
         'login' => '2', 'server' => 'D', 'is_enabled' => true,
     ]);
+    $billing->subscribeAccount($slave);
 
-    $billing = app(\App\Services\Wallet\PlatformBilling::class);
-    $breakdown = $billing->monthlyBreakdown($user);
-    expect($breakdown['total'])->toBe(29.0); // 2×7 + 15
+    $billing->enableWebhookModule($user);
 
-    app(WalletService::class)->deposit(app(WalletService::class)->walletFor($user), 100);
-    expect($billing->chargeMonthly($user))->toBeTrue();
+    // 100 - 7 - 7 - 15 = 71.
     expect((float) $user->wallet->fresh()->balance)->toBe(71.0);
+    expect($billing->monthlyBreakdown($user)['total'])->toBe(29.0); // 2×7 + 15
+    expect($billing->hasWebhookModule($user))->toBeTrue();
+
+    // Desconectar la esclava deja de cobrarla.
+    $billing->cancelAccount($slave);
+    expect($billing->monthlyBreakdown($user)['accounts'])->toBe(1);
 });
 
 it('el worker solo copia esclavas con suscripción activa a una maestra ajena', function () {

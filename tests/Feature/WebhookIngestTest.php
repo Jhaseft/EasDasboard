@@ -9,9 +9,19 @@ use Illuminate\Support\Facades\Queue;
 
 uses(RefreshDatabase::class);
 
-function makeAccount(array $overrides = []): BrokerAccount
+function makeAccount(array $overrides = [], bool $withWebhookModule = true): BrokerAccount
 {
     $user = User::factory()->create();
+
+    // El webhook es un add-on de pago: el módulo debe estar activo.
+    if ($withWebhookModule) {
+        \App\Models\PlatformSubscription::create([
+            'user_id' => $user->id,
+            'item'    => 'webhook_module',
+            'amount'  => 15,
+            'status'  => 'active',
+        ]);
+    }
 
     return $user->brokerAccounts()->create(array_merge([
         'name'            => 'Maestra',
@@ -75,6 +85,17 @@ it('valida que buy/sell requieran volumen', function () {
         'action' => 'buy',
         'symbol' => 'EURUSD',
     ])->assertStatus(422);
+});
+
+it('rechaza el webhook si el módulo no está activo (402)', function () {
+    Queue::fake();
+    $account = makeAccount(withWebhookModule: false);
+
+    $this->postJson("/api/webhook/{$account->webhook_token}", [
+        'action' => 'buy', 'symbol' => 'EURUSD', 'volume' => 0.1,
+    ])->assertStatus(402);
+
+    Queue::assertNothingPushed();
 });
 
 it('no acepta webhook si ingest_mode es solo read', function () {

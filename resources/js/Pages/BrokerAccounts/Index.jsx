@@ -94,8 +94,19 @@ function PublishForm({ account }) {
     );
 }
 
-export default function Index({ accounts }) {
+export default function Index({ accounts, webhookModuleActive, webhookModuleFee }) {
     const flash = usePage().props.flash ?? {};
+    const { errors } = usePage().props;
+
+    const toggleWebhookModule = () => {
+        if (webhookModuleActive) {
+            if (confirm('¿Desactivar el módulo webhook? Tus webhooks dejarán de funcionar.')) {
+                router.delete(route('billing.webhook-module.disable'), { preserveScroll: true });
+            }
+        } else if (confirm(`Activar el módulo webhook cuesta $${webhookModuleFee}/mes. ¿Continuar?`)) {
+            router.post(route('billing.webhook-module.enable'), {}, { preserveScroll: true });
+        }
+    };
 
     const toggle = (account) => {
         router.patch(route('broker-accounts.toggle', account.id), {}, { preserveScroll: true });
@@ -149,6 +160,35 @@ export default function Index({ accounts }) {
                             {flash.error}
                         </div>
                     )}
+                    {errors?.balance && (
+                        <div className="rounded-md bg-red-50 p-4 text-sm text-red-800">
+                            {errors.balance}
+                        </div>
+                    )}
+
+                    <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-white p-4 shadow-sm">
+                        <div className="text-sm">
+                            <span className="font-medium text-gray-800">Módulo Webhook</span>{' '}
+                            <span className="text-gray-500">(recibir señales de TradingView/Python · ${webhookModuleFee}/mes)</span>
+                            <div className="text-xs">
+                                Estado:{' '}
+                                {webhookModuleActive
+                                    ? <span className="font-semibold text-green-600">activo</span>
+                                    : <span className="font-semibold text-gray-400">inactivo</span>}
+                            </div>
+                        </div>
+                        <button
+                            onClick={toggleWebhookModule}
+                            className={
+                                'rounded-md px-3 py-1.5 text-sm font-medium ' +
+                                (webhookModuleActive
+                                    ? 'text-red-600 hover:text-red-800'
+                                    : 'bg-indigo-600 text-white hover:bg-indigo-700')
+                            }
+                        >
+                            {webhookModuleActive ? 'Desactivar' : 'Activar módulo'}
+                        </button>
+                    </div>
 
                     {accounts.length === 0 ? (
                         <div className="rounded-lg bg-white p-6 text-gray-600 shadow-sm">

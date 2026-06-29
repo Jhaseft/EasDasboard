@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\BillingController;
 use App\Http\Controllers\BotController;
 use App\Http\Controllers\BrokerAccountController;
 use App\Http\Controllers\CopyTradeController;
@@ -55,6 +56,10 @@ Route::middleware('auth')->group(function () {
     // Billetera
     Route::get('/wallet', [WalletController::class, 'index'])->name('wallet.index');
     Route::post('/wallet/deposit', [WalletController::class, 'deposit'])->name('wallet.deposit');
+
+    // Módulo webhook (add-on $15/mes)
+    Route::post('/billing/webhook-module', [BillingController::class, 'enableWebhookModule'])->name('billing.webhook-module.enable');
+    Route::delete('/billing/webhook-module', [BillingController::class, 'disableWebhookModule'])->name('billing.webhook-module.disable');
 
     // Marketplace
     Route::get('/marketplace', [MarketplaceController::class, 'index'])->name('marketplace.index');

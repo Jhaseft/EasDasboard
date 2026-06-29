@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Jobs\ExecuteSignal;
 use App\Models\BrokerAccount;
 use App\Models\Signal;
+use App\Services\Wallet\PlatformBilling;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -26,13 +27,21 @@ use Illuminate\Http\Request;
  */
 class WebhookController extends Controller
 {
-    public function receive(Request $request, string $token): JsonResponse
+    public function receive(Request $request, string $token, PlatformBilling $billing): JsonResponse
     {
-        $account = BrokerAccount::where('webhook_token', $token)->first();
+        $account = BrokerAccount::with('user')->where('webhook_token', $token)->first();
 
         if (! $account || ! $account->is_enabled || ! $account->acceptsWebhook()) {
             // Mensaje genérico: no revelar si el token existe.
             return response()->json(['ok' => false, 'message' => 'Webhook inválido.'], 404);
+        }
+
+        // El webhook es un add-on de pago ($15/mes): requiere módulo activo.
+        if (! $billing->hasWebhookModule($account->user)) {
+            return response()->json([
+                'ok' => false,
+                'message' => 'El módulo webhook no está activo para esta cuenta.',
+            ], 402);
         }
 
         $data = $request->validate([

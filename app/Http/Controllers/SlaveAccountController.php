@@ -2,9 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Exceptions\InsufficientFundsException;
 use App\Jobs\ProvisionSlaveAccount;
 use App\Models\SlaveAccount;
 use App\Services\MetaApi\MetaApiProvisioning;
+use App\Services\Wallet\PlatformBilling;
+use App\Services\Wallet\WalletService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -35,7 +38,7 @@ class SlaveAccountController extends Controller
         ]);
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request, PlatformBilling $billing, WalletService $wallets): RedirectResponse
     {
         $data = $request->validate([
             'master_account_id' => ['required', 'integer', 'exists:broker_accounts,id'],
@@ -57,6 +60,14 @@ class SlaveAccountController extends Controller
             403
         );
 
+        // Una esclava también es una "cuenta conectada": $7/mes.
+        $fee = (float) config('billing.account_fee');
+        if (! $wallets->walletFor($request->user())->hasFunds($fee)) {
+            return back()->withErrors([
+                'balance' => "Saldo insuficiente. Conectar una cuenta cuesta \${$fee}/mes. Recarga tu billetera.",
+            ]);
+        }
+
         $slave = $request->user()->slaveAccounts()->create([
             'master_account_id' => $data['master_account_id'],
             'name'              => $data['name'],
@@ -71,11 +82,19 @@ class SlaveAccountController extends Controller
             'provision_state'   => 'validating',
         ]);
 
+        try {
+            $billing->subscribeAccount($slave);
+        } catch (InsufficientFundsException) {
+            $slave->delete();
+
+            return back()->withErrors(['balance' => 'Saldo insuficiente para conectar la cuenta.']);
+        }
+
         ProvisionSlaveAccount::dispatch($slave, $data['password']);
 
         return redirect()
             ->route('slave-accounts.index')
-            ->with('success', 'Cuenta esclava en validación con MetaApi. El estado se actualizará en unos minutos.');
+            ->with('success', "Cuenta esclava conectada (se cobró \${$fee}/mes). En validación con MetaApi.");
     }
 
     public function edit(Request $request, SlaveAccount $slaveAccount): Response
@@ -129,9 +148,12 @@ class SlaveAccountController extends Controller
         return back();
     }
 
-    public function destroy(Request $request, SlaveAccount $slaveAccount, MetaApiProvisioning $metaapi): RedirectResponse
+    public function destroy(Request $request, SlaveAccount $slaveAccount, MetaApiProvisioning $metaapi, PlatformBilling $billing): RedirectResponse
     {
         $this->authorizeAccount($request, $slaveAccount);
+
+        // Al desconectar deja de cobrarse la tarifa mensual de esta cuenta.
+        $billing->cancelAccount($slaveAccount);
 
         if ($slaveAccount->metaapi_account_id) {
             try {
