@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\Wallet\PlatformBilling;
 use App\Services\Wallet\WalletService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -10,7 +11,10 @@ use Inertia\Response;
 
 class WalletController extends Controller
 {
-    public function __construct(protected WalletService $wallets) {}
+    public function __construct(
+        protected WalletService $wallets,
+        protected PlatformBilling $platform,
+    ) {}
 
     public function index(Request $request): Response
     {
@@ -24,6 +28,7 @@ class WalletController extends Controller
         return Inertia::render('Wallet/Index', [
             'wallet' => $wallet->only('balance', 'currency'),
             'transactions' => $transactions,
+            'platformCost' => $this->platform->monthlyBreakdown($request->user()),
         ]);
     }
 

@@ -75,7 +75,14 @@ export default function Index({ masters, mySubs, balance }) {
                                     className="rounded-lg bg-white p-5 shadow-sm transition hover:shadow-md"
                                 >
                                     <div className="flex items-start justify-between">
-                                        <div className="font-medium text-gray-900">{m.name}</div>
+                                        <div className="font-medium text-gray-900">
+                                            {m.name}
+                                            {m.is_own && (
+                                                <span className="ml-2 rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-500">
+                                                    Tuya
+                                                </span>
+                                            )}
+                                        </div>
                                         <span className="rounded-full bg-indigo-50 px-2 py-1 text-xs font-semibold text-indigo-700">
                                             {priceLabel(m)}
                                         </span>

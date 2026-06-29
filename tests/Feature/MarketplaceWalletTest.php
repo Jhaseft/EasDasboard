@@ -95,6 +95,30 @@ it('rechaza suscribirse sin saldo suficiente', function () {
     Queue::assertNothingPushed();
 });
 
+it('calcula y cobra la tarifa de plataforma ($7/cuenta + webhook)', function () {
+    config(['billing.account_fee' => 7, 'billing.webhook_module_fee' => 15]);
+
+    $user = User::factory()->create();
+    // 1 cuenta de bróker con webhook + 1 esclava = 2 cuentas.
+    $user->brokerAccounts()->create([
+        'name' => 'M', 'platform' => 'mt5', 'login' => '1', 'server' => 'D',
+        'is_enabled' => true, 'ingest_mode' => 'both',
+    ]);
+    $master = $user->brokerAccounts()->first();
+    $user->slaveAccounts()->create([
+        'master_account_id' => $master->id, 'name' => 'S', 'platform' => 'mt5',
+        'login' => '2', 'server' => 'D', 'is_enabled' => true,
+    ]);
+
+    $billing = app(\App\Services\Wallet\PlatformBilling::class);
+    $breakdown = $billing->monthlyBreakdown($user);
+    expect($breakdown['total'])->toBe(29.0); // 2×7 + 15
+
+    app(WalletService::class)->deposit(app(WalletService::class)->walletFor($user), 100);
+    expect($billing->chargeMonthly($user))->toBeTrue();
+    expect((float) $user->wallet->fresh()->balance)->toBe(71.0);
+});
+
 it('el worker solo copia esclavas con suscripción activa a una maestra ajena', function () {
     config(['services.bot_api.key' => 'test-key']);
 

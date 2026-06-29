@@ -24,7 +24,6 @@ class MarketplaceController extends Controller
         $userId = $request->user()->id;
 
         $masters = BrokerAccount::public()
-            ->where('user_id', '!=', $userId)
             ->withCount(['subscriptions as followers_count' => fn ($q) => $q->where('status', 'active')])
             ->get()
             ->map(fn (BrokerAccount $m) => [
@@ -36,6 +35,7 @@ class MarketplaceController extends Controller
                 'subscription_price' => (float) $m->subscription_price,
                 'profit_share_pct'   => (float) $m->profit_share_pct,
                 'followers_count'    => $m->followers_count,
+                'is_own'             => $m->user_id === $userId,
             ]);
 
         $mySubs = MarketplaceSubscription::where('subscriber_id', $userId)
