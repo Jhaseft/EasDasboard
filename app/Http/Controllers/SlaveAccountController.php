@@ -78,6 +78,48 @@ class SlaveAccountController extends Controller
             ->with('success', 'Cuenta esclava en validación con MetaApi. El estado se actualizará en unos minutos.');
     }
 
+    public function edit(Request $request, SlaveAccount $slaveAccount): Response
+    {
+        $this->authorizeAccount($request, $slaveAccount);
+
+        $slaveAccount->load('master:id,name');
+
+        return Inertia::render('SlaveAccounts/Edit', [
+            'slave' => $slaveAccount->only(
+                'id', 'name', 'lot_multiplier', 'auto_copy', 'copy_mode', 'fixed_lot',
+                'platform', 'login', 'server', 'master_account_id',
+            ) + ['master' => $slaveAccount->master?->only('id', 'name')],
+        ]);
+    }
+
+    public function update(Request $request, SlaveAccount $slaveAccount): RedirectResponse
+    {
+        $this->authorizeAccount($request, $slaveAccount);
+
+        // Solo editamos los ajustes de copia. Cambiar login/servidor/contraseña
+        // exige re-provisionar en MetaApi, así que eso se hace borrando y
+        // reconectando la cuenta, no aquí.
+        $data = $request->validate([
+            'name'           => ['required', 'string', 'max:255'],
+            'lot_multiplier' => ['nullable', 'numeric', 'min:0.0001', 'max:999'],
+            'auto_copy'      => ['nullable', 'boolean'],
+            'copy_mode'      => ['nullable', 'in:multiplier,fixed'],
+            'fixed_lot'      => ['nullable', 'numeric', 'min:0.01', 'max:999', 'required_if:copy_mode,fixed'],
+        ]);
+
+        $slaveAccount->update([
+            'name'           => $data['name'],
+            'lot_multiplier' => $data['lot_multiplier'] ?? $slaveAccount->lot_multiplier,
+            'auto_copy'      => $data['auto_copy'] ?? false,
+            'copy_mode'      => $data['copy_mode'] ?? 'multiplier',
+            'fixed_lot'      => $data['fixed_lot'] ?? null,
+        ]);
+
+        return redirect()
+            ->route('slave-accounts.index')
+            ->with('success', 'Cuenta esclava actualizada.');
+    }
+
     public function toggle(Request $request, SlaveAccount $slaveAccount): RedirectResponse
     {
         $this->authorizeAccount($request, $slaveAccount);

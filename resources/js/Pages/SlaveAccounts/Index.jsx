@@ -91,6 +91,12 @@ export default function Index({ slaves }) {
                                     )}
 
                                     <div className="mt-4 flex items-center justify-end gap-4 border-t border-gray-100 pt-3 text-sm">
+                                        <Link
+                                            href={route('slave-accounts.edit', slave.id)}
+                                            className="text-indigo-600 hover:text-indigo-900"
+                                        >
+                                            Editar
+                                        </Link>
                                         <button
                                             onClick={() => toggle(slave)}
                                             className="text-indigo-600 hover:text-indigo-900"

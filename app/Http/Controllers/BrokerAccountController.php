@@ -16,8 +16,14 @@ class BrokerAccountController extends Controller
     public function index(Request $request): Response
     {
         $accounts = $request->user()->brokerAccounts()
+            ->withCount(['subscriptions as followers_count' => fn ($q) => $q->where('status', 'active')])
             ->latest()
-            ->get(['id', 'name', 'platform', 'login', 'server', 'provision_state', 'connection_status', 'is_enabled', 'last_error', 'webhook_token', 'ingest_mode']);
+            ->get([
+                'id', 'name', 'platform', 'login', 'server', 'provision_state', 'connection_status',
+                'is_enabled', 'last_error', 'webhook_token', 'ingest_mode',
+                'is_public', 'display_name', 'description', 'show_balance',
+                'pricing_model', 'subscription_price', 'profit_share_pct',
+            ]);
 
         return Inertia::render('BrokerAccounts/Index', [
             'accounts' => $accounts,
@@ -79,6 +85,38 @@ class BrokerAccountController extends Controller
         $brokerAccount->update(['webhook_token' => Str::random(48)]);
 
         return back()->with('success', 'Token del webhook regenerado. La URL anterior dejó de funcionar.');
+    }
+
+    /**
+     * Publica / despublica la cuenta en el marketplace y fija su precio.
+     */
+    public function publish(Request $request, BrokerAccount $brokerAccount): RedirectResponse
+    {
+        $this->authorizeAccount($request, $brokerAccount);
+
+        $data = $request->validate([
+            'is_public'          => ['required', 'boolean'],
+            'display_name'       => ['nullable', 'string', 'max:255'],
+            'description'        => ['nullable', 'string', 'max:1000'],
+            'show_balance'       => ['nullable', 'boolean'],
+            'pricing_model'      => ['required', 'in:subscription,profit_share'],
+            'subscription_price' => ['nullable', 'numeric', 'min:0', 'max:100000', 'required_if:pricing_model,subscription'],
+            'profit_share_pct'   => ['nullable', 'numeric', 'min:0', 'max:100', 'required_if:pricing_model,profit_share'],
+        ]);
+
+        $brokerAccount->update([
+            'is_public'          => $data['is_public'],
+            'display_name'       => $data['display_name'] ?? null,
+            'description'        => $data['description'] ?? null,
+            'show_balance'       => $data['show_balance'] ?? false,
+            'pricing_model'      => $data['pricing_model'],
+            'subscription_price' => $data['subscription_price'] ?? 0,
+            'profit_share_pct'   => $data['profit_share_pct'] ?? 0,
+        ]);
+
+        return back()->with('success', $data['is_public']
+            ? 'Cuenta publicada en el marketplace.'
+            : 'Cuenta retirada del marketplace.');
     }
 
     public function destroy(Request $request, BrokerAccount $brokerAccount, MetaApiProvisioning $metaapi): RedirectResponse

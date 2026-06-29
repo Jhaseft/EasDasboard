@@ -26,13 +26,44 @@ class BrokerAccount extends Model
         'connection_status',
         'last_error',
         'is_enabled',
+        'is_public',
+        'display_name',
+        'description',
+        'show_balance',
+        'pricing_model',
+        'subscription_price',
+        'profit_share_pct',
     ];
 
     protected function casts(): array
     {
         return [
-            'is_enabled' => 'boolean',
+            'is_enabled'         => 'boolean',
+            'is_public'          => 'boolean',
+            'show_balance'       => 'boolean',
+            'subscription_price' => 'decimal:2',
+            'profit_share_pct'   => 'decimal:2',
         ];
+    }
+
+    /**
+     * @return HasMany<MarketplaceSubscription, $this>
+     */
+    public function subscriptions(): HasMany
+    {
+        return $this->hasMany(MarketplaceSubscription::class, 'master_account_id');
+    }
+
+    public function scopePublic($query)
+    {
+        return $query->where('is_public', true)
+            ->where('is_enabled', true)
+            ->where('provision_state', 'deployed');
+    }
+
+    public function publicName(): string
+    {
+        return $this->display_name ?: $this->name;
     }
 
     public function user(): BelongsTo

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\BotTrade;
 use App\Models\BrokerAccount;
 use App\Models\CopiedTrade;
+use App\Models\MarketplaceSubscription;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -75,6 +76,23 @@ class WorkerController extends Controller
                 ->whereNotNull('metaapi_account_id')])
             ->get()
             ->map(function (BrokerAccount $master) {
+                // Una esclava se copia si es del propio dueño de la maestra, o si
+                // su dueño tiene una suscripción ACTIVA a esta maestra (marketplace).
+                $slaves = $master->slaveAccounts->filter(function ($slave) use ($master) {
+                    if ($slave->user_id === $master->user_id) {
+                        return true;
+                    }
+
+                    return MarketplaceSubscription::where('subscriber_id', $slave->user_id)
+                        ->where('master_account_id', $master->id)
+                        ->where('status', 'active')
+                        ->exists();
+                })->values();
+
+                if ($slaves->isEmpty()) {
+                    return null; // sin esclavas habilitadas a copiar -> se descarta
+                }
+
                 $openTrades = CopiedTrade::where('master_account_id', $master->id)
                     ->where('status', 'open')
                     ->get(['id', 'slave_account_id', 'master_position_id', 'slave_position_id', 'symbol']);
@@ -83,7 +101,7 @@ class WorkerController extends Controller
                     'master_account_id' => $master->id,
                     'metaapi_account_id' => $master->metaapi_account_id,
                     'region' => $master->region,
-                    'slaves' => $master->slaveAccounts->map(fn ($slave) => [
+                    'slaves' => $slaves->map(fn ($slave) => [
                         'slave_account_id' => $slave->id,
                         'metaapi_account_id' => $slave->metaapi_account_id,
                         'region' => $slave->region,
@@ -100,6 +118,7 @@ class WorkerController extends Controller
                     ])->values(),
                 ];
             })
+            ->filter()
             ->values();
 
         return response()->json([

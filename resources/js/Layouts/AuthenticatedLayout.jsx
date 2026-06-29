@@ -42,6 +42,18 @@ export default function AuthenticatedLayout({ header, children }) {
                                 >
                                     Esclavas
                                 </NavLink>
+                                <NavLink
+                                    href={route('marketplace.index')}
+                                    active={route().current('marketplace.*')}
+                                >
+                                    Marketplace
+                                </NavLink>
+                                <NavLink
+                                    href={route('wallet.index')}
+                                    active={route().current('wallet.*')}
+                                >
+                                    Billetera
+                                </NavLink>
                             </div>
                         </div>
 
@@ -157,6 +169,18 @@ export default function AuthenticatedLayout({ header, children }) {
                             active={route().current('slave-accounts.*')}
                         >
                             Esclavas
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink
+                            href={route('marketplace.index')}
+                            active={route().current('marketplace.*')}
+                        >
+                            Marketplace
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink
+                            href={route('wallet.index')}
+                            active={route().current('wallet.*')}
+                        >
+                            Billetera
                         </ResponsiveNavLink>
                     </div>
 

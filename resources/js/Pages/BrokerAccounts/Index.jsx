@@ -1,6 +1,7 @@
 import PrimaryButton from '@/Components/PrimaryButton';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, Link, router, usePage } from '@inertiajs/react';
+import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
+import { useState } from 'react';
 
 const STATE_STYLES = {
     deployed: 'bg-green-100 text-green-800',
@@ -9,6 +10,89 @@ const STATE_STYLES = {
     pending: 'bg-gray-100 text-gray-600',
     error: 'bg-red-100 text-red-800',
 };
+
+function PublishForm({ account }) {
+    const [open, setOpen] = useState(false);
+    const { data, setData, patch, processing } = useForm({
+        is_public: !!account.is_public,
+        display_name: account.display_name ?? '',
+        description: account.description ?? '',
+        show_balance: !!account.show_balance,
+        pricing_model: account.pricing_model ?? 'subscription',
+        subscription_price: account.subscription_price ?? '0',
+        profit_share_pct: account.profit_share_pct ?? '0',
+    });
+
+    const save = (e) => {
+        e.preventDefault();
+        patch(route('broker-accounts.publish', account.id), { preserveScroll: true });
+    };
+
+    return (
+        <div className="mt-3 rounded-md border border-gray-200 bg-gray-50 p-3">
+            <button
+                onClick={() => setOpen((o) => !o)}
+                className="flex w-full items-center justify-between text-xs font-medium text-gray-700"
+            >
+                <span>
+                    Marketplace:{' '}
+                    {account.is_public ? (
+                        <span className="text-green-600">publicada</span>
+                    ) : (
+                        <span className="text-gray-400">no publicada</span>
+                    )}
+                    {account.followers_count > 0 && ` · ${account.followers_count} seguidor(es)`}
+                </span>
+                <span className="text-indigo-600">{open ? 'Cerrar' : 'Configurar'}</span>
+            </button>
+
+            {open && (
+                <form onSubmit={save} className="mt-3 space-y-3 border-t border-gray-200 pt-3">
+                    <label className="flex items-center gap-2 text-sm text-gray-800">
+                        <input type="checkbox" className="rounded border-gray-300 text-indigo-600"
+                            checked={data.is_public} onChange={(e) => setData('is_public', e.target.checked)} />
+                        Publicar en el marketplace (otros pueden copiarla)
+                    </label>
+
+                    <input type="text" placeholder="Nombre público (opcional)"
+                        className="block w-full rounded-md border-gray-300 text-sm shadow-sm"
+                        value={data.display_name} onChange={(e) => setData('display_name', e.target.value)} />
+
+                    <textarea placeholder="Descripción / estrategia (opcional)" rows={2}
+                        className="block w-full rounded-md border-gray-300 text-sm shadow-sm"
+                        value={data.description} onChange={(e) => setData('description', e.target.value)} />
+
+                    <label className="flex items-center gap-2 text-xs text-gray-600">
+                        <input type="checkbox" className="rounded border-gray-300 text-indigo-600"
+                            checked={data.show_balance} onChange={(e) => setData('show_balance', e.target.checked)} />
+                        Mostrar balance en $ (si no, solo %)
+                    </label>
+
+                    <div className="grid grid-cols-2 gap-2">
+                        <select className="rounded-md border-gray-300 text-sm shadow-sm"
+                            value={data.pricing_model} onChange={(e) => setData('pricing_model', e.target.value)}>
+                            <option value="subscription">Suscripción mensual</option>
+                            <option value="profit_share">% de ganancias</option>
+                        </select>
+                        {data.pricing_model === 'subscription' ? (
+                            <input type="number" step="1" min="0" placeholder="$ / mes"
+                                className="rounded-md border-gray-300 text-sm shadow-sm"
+                                value={data.subscription_price} onChange={(e) => setData('subscription_price', e.target.value)} />
+                        ) : (
+                            <input type="number" step="1" min="0" max="100" placeholder="% ganancias"
+                                className="rounded-md border-gray-300 text-sm shadow-sm"
+                                value={data.profit_share_pct} onChange={(e) => setData('profit_share_pct', e.target.value)} />
+                        )}
+                    </div>
+
+                    <div className="flex justify-end">
+                        <PrimaryButton disabled={processing}>Guardar</PrimaryButton>
+                    </div>
+                </form>
+            )}
+        </div>
+    );
+}
 
 export default function Index({ accounts }) {
     const flash = usePage().props.flash ?? {};
@@ -131,6 +215,8 @@ export default function Index({ accounts }) {
                                             </p>
                                         </div>
                                     )}
+
+                                    <PublishForm account={account} />
 
                                     <div className="mt-4 flex items-center justify-end gap-4 border-t border-gray-100 pt-3 text-sm">
                                         <button
