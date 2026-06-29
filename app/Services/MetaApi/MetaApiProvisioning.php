@@ -36,7 +36,12 @@ class MetaApiProvisioning
         return Http::withHeaders([
             'auth-token' => $this->token,
             'Accept' => 'application/json',
-        ])->baseUrl($this->baseUrl)->timeout(30);
+        ])->baseUrl($this->baseUrl)
+            // La Provisioning API a veces tarda; como corremos en cola podemos
+            // esperar. Reintentamos ante cortes de red/timeout transitorios.
+            ->connectTimeout(15)
+            ->timeout(120)
+            ->retry(2, 2000, throw: false);
     }
 
     /**
