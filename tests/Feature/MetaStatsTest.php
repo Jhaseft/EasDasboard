@@ -29,11 +29,15 @@ function fakeMetaStats(): void
             'wonTradesPercent' => 60, 'trades' => 100,
             'balance' => 1000, 'equity' => 1100, 'profit' => 100,
         ]]),
-        '*/historical-trades/*' => Http::response(['historicalTrades' => [[
-            'symbol' => 'EURUSD', 'type' => 'DEAL_TYPE_BUY', 'volume' => 0.1,
-            'gain' => 2.5, 'profit' => 25, 'success' => 'won',
-            'openTime' => '2026-06-01 10:00:00.000', 'closeTime' => '2026-06-01 12:00:00.000',
-        ]]]),
+        '*/historical-trades/*' => Http::response(['trades' => [
+            // Entrada de balance que debe filtrarse (no es una operación real).
+            ['type' => 'DEAL_TYPE_BALANCE', 'profit' => 100000],
+            [
+                'symbol' => 'EURUSD', 'type' => 'DEAL_TYPE_BUY', 'volume' => 0.1,
+                'gain' => 2.5, 'profit' => 25, 'success' => 'won',
+                'openTime' => '2026-06-01 10:00:00.000', 'closeTime' => '2026-06-01 12:00:00.000',
+            ],
+        ]]),
     ]);
 }
 

@@ -111,7 +111,7 @@ class BrokerAccountController extends Controller
     /**
      * Publica / despublica la cuenta en el marketplace y fija su precio.
      */
-    public function publish(Request $request, BrokerAccount $brokerAccount): RedirectResponse
+    public function publish(Request $request, BrokerAccount $brokerAccount, MetaApiProvisioning $metaapi): RedirectResponse
     {
         $this->authorizeAccount($request, $brokerAccount);
 
@@ -134,6 +134,16 @@ class BrokerAccountController extends Controller
             'subscription_price' => $data['subscription_price'] ?? 0,
             'profit_share_pct'   => $data['profit_share_pct'] ?? 0,
         ]);
+
+        // Al publicar, habilita las estadísticas auditadas (MetaStats) en MetaApi
+        // para que el marketplace pueda mostrar el rendimiento. Best-effort.
+        if ($data['is_public'] && $brokerAccount->metaapi_account_id) {
+            try {
+                $metaapi->enableMetaStats($brokerAccount->metaapi_account_id);
+            } catch (\Throwable) {
+                // Si falla, las stats simplemente no aparecerán hasta reintentar.
+            }
+        }
 
         return back()->with('success', $data['is_public']
             ? 'Cuenta publicada en el marketplace.'

@@ -86,15 +86,23 @@ class MetaStats
     protected function rawTrades(BrokerAccount $account, ?int $limit): array
     {
         // Historial completo (desde 2015 hasta hoy); MetaStats lo pagina por fecha.
-        $start = '2015-01-01 00:00:00.000';
-        $end = now()->addDay()->format('Y-m-d H:i:s').'.000';
+        // Las fechas van en el PATH y llevan espacios -> hay que URL-encodearlas.
+        $start = rawurlencode('2015-01-01 00:00:00.000');
+        $end = rawurlencode(now()->addDay()->format('Y-m-d H:i:s').'.000');
 
         $resp = $this->client($account->region)
             ->get("/users/current/accounts/{$account->metaapi_account_id}/historical-trades/{$start}/{$end}", [
                 'limit' => $limit,
             ]);
 
-        $trades = $resp->successful() ? ($resp->json('historicalTrades') ?? []) : [];
+        // La MetaStats API devuelve la lista bajo la clave 'trades'.
+        $trades = $resp->successful() ? ($resp->json('trades') ?? []) : [];
+
+        // Solo operaciones reales de mercado: descartar depósitos/retiros/balance.
+        $trades = array_values(array_filter($trades, function ($t) {
+            $type = $t['type'] ?? '';
+            return in_array($type, ['DEAL_TYPE_BUY', 'DEAL_TYPE_SELL'], true) && ! empty($t['symbol']);
+        }));
 
         // Más recientes primero.
         usort($trades, fn ($a, $b) => strcmp($b['closeTime'] ?? '', $a['closeTime'] ?? ''));

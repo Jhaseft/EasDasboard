@@ -64,6 +64,8 @@ class MetaApiProvisioning
             'region' => $account->region ?: config('services.metaapi.region'),
             'reliability' => config('services.metaapi.reliability', 'high'),
             'application' => 'MetaApi',
+            // Habilita las estadísticas auditadas (MetaStats) para el marketplace.
+            'metastatsApiEnabled' => true,
         ];
 
         // MetaApi valida la conexion del broker de forma asincrona: hasta que
@@ -121,6 +123,21 @@ class MetaApiProvisioning
         if ($response->failed()) {
             throw new RuntimeException(
                 'MetaApi deploy fallo ('.$response->status().'): '.$response->body()
+            );
+        }
+    }
+
+    /**
+     * Habilita la MetaStats API (estadísticas auditadas) en una cuenta existente.
+     * Necesario para mostrar el rendimiento en el marketplace.
+     */
+    public function enableMetaStats(string $accountId): void
+    {
+        $response = $this->client()->post("/users/current/accounts/{$accountId}/enable-metastats-api");
+
+        if ($response->failed()) {
+            throw new RuntimeException(
+                'MetaApi enableMetaStats falló ('.$response->status().'): '.$response->body()
             );
         }
     }
