@@ -148,8 +148,8 @@ export default function Index({ accounts, webhookModuleActive, webhookModuleFee 
         >
             <Head title="Cuentas de broker" />
 
-            <div className="py-6 sm:py-12">
-                <div className="mx-auto max-w-5xl space-y-4 px-4 sm:px-6 lg:px-8">
+            <div className="py-4">
+                <div className="mx-auto max-w-7xl space-y-4 px-4 sm:px-6 lg:px-8">
                     {flash.success && (
                         <div className="rounded-md bg-green-50 p-4 text-sm text-green-800">
                             {flash.success}

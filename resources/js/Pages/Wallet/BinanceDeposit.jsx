@@ -197,6 +197,21 @@ function ResultCard({ kind, amountUsd, reason }) {
     );
 }
 
+function BackButton() {
+    return (
+        <button
+            type="button"
+            onClick={() => window.history.back()}
+            className="inline-flex items-center gap-1 text-sm font-medium text-gray-600 transition hover:text-gray-900"
+        >
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+            </svg>
+            Volver
+        </button>
+    );
+}
+
 export default function BinanceDeposit({ intent, networks = [] }) {
     const { status, reason, setStatus } = useBinanceStatus(intent.intentId, intent.status);
 
@@ -212,9 +227,12 @@ export default function BinanceDeposit({ intent, networks = [] }) {
                 header={<h2 className="text-xl font-semibold leading-tight text-gray-800">Recarga con USDT</h2>}
             >
                 <Head title="Recarga con USDT" />
-                <div className="py-6 sm:py-12">
-                    <div className="mx-auto max-w-md px-4 sm:px-6 lg:px-8">
-                        <ResultCard kind={status} amountUsd={intent.amountUsd} reason={reason} />
+                <div className="py-4">
+                    <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                        <BackButton />
+                        <div className="mx-auto mt-4 max-w-md">
+                            <ResultCard kind={status} amountUsd={intent.amountUsd} reason={reason} />
+                        </div>
                     </div>
                 </div>
             </AuthenticatedLayout>
@@ -227,9 +245,10 @@ export default function BinanceDeposit({ intent, networks = [] }) {
         >
             <Head title="Recarga con USDT" />
 
-            <div className="py-6 sm:py-12">
-                <div className="mx-auto max-w-md px-4 sm:px-6 lg:px-8">
-                    <div className="overflow-hidden rounded-lg bg-white shadow-sm">
+            <div className="py-4">
+                <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                    <BackButton />
+                    <div className="mx-auto mt-4 max-w-md overflow-hidden rounded-lg bg-white shadow-sm">
                         <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4">
                             <h3 className="text-base font-semibold text-gray-900">Depósito con USDT</h3>
                             <span className="rounded bg-yellow-50 px-1.5 py-0.5 text-xs font-medium text-yellow-700">
@@ -269,12 +288,6 @@ export default function BinanceDeposit({ intent, networks = [] }) {
                             </div>
 
                             <TxidConfirm intentId={intent.intentId} onResolved={setStatus} />
-                        </div>
-
-                        <div className="border-t border-gray-100 px-6 py-4">
-                            <Link href={route('wallet.index')}>
-                                <SecondaryButton type="button">Volver</SecondaryButton>
-                            </Link>
                         </div>
                     </div>
                 </div>

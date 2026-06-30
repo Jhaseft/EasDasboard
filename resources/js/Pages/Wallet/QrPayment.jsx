@@ -95,51 +95,61 @@ export default function QrPayment({ qr }) {
         >
             <Head title="Pagar con QR" />
 
-            <div className="py-6 sm:py-12">
-                <div className="mx-auto max-w-md px-4 sm:px-6 lg:px-8">
-                    {status === 'PAID' ? (
-                        <SuccessCard amountUsd={qr.amountUsd} />
-                    ) : (
-                        <div className="overflow-hidden rounded-lg bg-white shadow-sm">
-                            <div className="border-b border-gray-100 px-6 py-4">
-                                <h3 className="text-base font-semibold text-gray-900">Escanea para pagar</h3>
-                                <p className="text-xs text-gray-400">Banco Económico</p>
-                            </div>
+            <div className="py-4">
+                <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                    <button
+                        type="button"
+                        onClick={() => window.history.back()}
+                        className="inline-flex items-center gap-1 text-sm font-medium text-gray-600 transition hover:text-gray-900"
+                    >
+                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+                        </svg>
+                        Volver
+                    </button>
 
-                            <div className="px-6 py-5">
-                                <QrImage image={qr.qrImage} />
-                                <p className="mt-3 text-center text-xs text-gray-500">
-                                    Escanea el código con la app de tu banco para pagar.
-                                </p>
+                    <div className="mx-auto mt-4 max-w-md">
+                        {status === 'PAID' ? (
+                            <SuccessCard amountUsd={qr.amountUsd} />
+                        ) : (
+                            <div className="overflow-hidden rounded-lg bg-white shadow-sm">
+                                <div className="border-b border-gray-100 px-6 py-4">
+                                    <h3 className="text-base font-semibold text-gray-900">Escanea para pagar</h3>
+                                    <p className="text-xs text-gray-400">Banco Económico</p>
+                                </div>
 
-                                <PaymentBreakdown amountUsd={qr.amountUsd} rate={qr.rate} amountBob={qr.amountBob} />
+                                <div className="px-6 py-5">
+                                    <QrImage image={qr.qrImage} />
+                                    <p className="mt-3 text-center text-xs text-gray-500">
+                                        Escanea el código con la app de tu banco para pagar.
+                                    </p>
 
-                                <div className="mt-3 text-xs text-gray-400">Válido hasta: {qr.dueDate}</div>
+                                    <PaymentBreakdown amountUsd={qr.amountUsd} rate={qr.rate} amountBob={qr.amountBob} />
 
-                                {canceled ? (
-                                    <div className="mt-4 rounded-md bg-red-50 p-3 text-center text-sm text-red-700">
-                                        El QR fue anulado o expiró.
-                                    </div>
-                                ) : (
-                                    <div className="mt-4 flex items-center justify-center gap-2 rounded-md bg-amber-50 p-3 text-sm font-medium text-amber-700">
-                                        <Spinner className="h-4 w-4" />
-                                        Esperando confirmación del pago…
-                                    </div>
-                                )}
-                            </div>
+                                    <div className="mt-3 text-xs text-gray-400">Válido hasta: {qr.dueDate}</div>
 
-                            <div className="flex justify-between border-t border-gray-100 px-6 py-4">
-                                <Link href={route('wallet.index')}>
-                                    <SecondaryButton type="button">Volver</SecondaryButton>
-                                </Link>
+                                    {canceled ? (
+                                        <div className="mt-4 rounded-md bg-red-50 p-3 text-center text-sm text-red-700">
+                                            El QR fue anulado o expiró.
+                                        </div>
+                                    ) : (
+                                        <div className="mt-4 flex items-center justify-center gap-2 rounded-md bg-amber-50 p-3 text-sm font-medium text-amber-700">
+                                            <Spinner className="h-4 w-4" />
+                                            Esperando confirmación del pago…
+                                        </div>
+                                    )}
+                                </div>
+
                                 {!canceled && (
-                                    <SecondaryButton type="button" onClick={cancel} disabled={canceling}>
-                                        {canceling ? 'Cancelando…' : 'Cancelar pago'}
-                                    </SecondaryButton>
+                                    <div className="flex justify-end border-t border-gray-100 px-6 py-4">
+                                        <SecondaryButton type="button" onClick={cancel} disabled={canceling}>
+                                            {canceling ? 'Cancelando…' : 'Cancelar pago'}
+                                        </SecondaryButton>
+                                    </div>
                                 )}
                             </div>
-                        </div>
-                    )}
+                        )}
+                    </div>
                 </div>
             </div>
         </AuthenticatedLayout>

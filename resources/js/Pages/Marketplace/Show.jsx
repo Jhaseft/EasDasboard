@@ -48,8 +48,8 @@ export default function Show({ master, subscribed, balance, regions, stats, trad
         >
             <Head title={master.name} />
 
-            <div className="py-6 sm:py-12">
-                <div className="mx-auto max-w-2xl space-y-6 px-4 sm:px-6 lg:px-8">
+            <div className="py-4">
+                <div className="mx-auto max-w-7xl space-y-4 px-4 sm:px-6 lg:px-8">
                     <Link href={route('marketplace.index')} className="text-sm text-indigo-600 hover:text-indigo-900">
                         ← Volver al marketplace
                     </Link>

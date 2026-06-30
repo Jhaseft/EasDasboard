@@ -35,8 +35,8 @@ export default function Create({ masters, regions }) {
         >
             <Head title="Conectar cuenta esclava" />
 
-            <div className="py-6 sm:py-12">
-                <div className="mx-auto max-w-2xl px-4 sm:px-6 lg:px-8">
+            <div className="py-4">
+                <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                     <div className="rounded-lg bg-white p-4 shadow-sm sm:p-6">
                         <p className="mb-6 text-sm text-gray-600">
                             La cuenta esclava recibirá copias de las operaciones

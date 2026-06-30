@@ -46,8 +46,8 @@ export default function Edit({ bot, strategyDefaults, brokerAccounts = [] }) {
         >
             <Head title={`Editar ${bot.name}`} />
 
-            <div className="py-6 sm:py-12">
-                <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
+            <div className="py-4">
+                <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                     <div className="rounded-lg bg-white p-4 shadow-sm sm:p-6">
                         <BotForm
                             data={data}
