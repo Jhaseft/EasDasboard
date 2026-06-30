@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\BillingController;
+use App\Http\Controllers\BinanceDepositController;
 use App\Http\Controllers\BotController;
 use App\Http\Controllers\BrokerAccountController;
 use App\Http\Controllers\CopyTradeController;
@@ -63,6 +64,12 @@ Route::middleware('auth')->group(function () {
     Route::get('/wallet/qr/{qrId}', [WalletQrController::class, 'show'])->name('wallet.qr.show');
     Route::get('/wallet/qr/{qrId}/status', [WalletQrController::class, 'status'])->name('wallet.qr.status');
     Route::delete('/wallet/qr/{qrId}', [WalletQrController::class, 'destroy'])->name('wallet.qr.destroy');
+
+    // Recarga con USDT (Binance) — página de depósito + polling + confirmación por TXID
+    Route::post('/wallet/binance', [BinanceDepositController::class, 'store'])->name('wallet.binance.store');
+    Route::get('/wallet/binance/{intent}', [BinanceDepositController::class, 'show'])->name('wallet.binance.show');
+    Route::get('/wallet/binance/{intent}/status', [BinanceDepositController::class, 'status'])->name('wallet.binance.status');
+    Route::post('/wallet/binance/{intent}/confirm', [BinanceDepositController::class, 'confirm'])->name('wallet.binance.confirm');
 
     // Módulo webhook (add-on $15/mes)
     Route::post('/billing/webhook-module', [BillingController::class, 'enableWebhookModule'])->name('billing.webhook-module.enable');

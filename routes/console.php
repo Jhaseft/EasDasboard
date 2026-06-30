@@ -14,3 +14,7 @@ Schedule::command('marketplace:charge-due')->dailyAt('03:00');
 // Renovación de la tarifa de plataforma por cuenta ($7/cuenta + módulo webhook).
 // Cada suscripción tiene su propia fecha de renovación, por eso corre a diario.
 Schedule::command('billing:charge-platform')->dailyAt('04:00');
+
+// Respaldo de la recarga con USDT: detecta depósitos en Binance y acredita los
+// intents pendientes aunque el usuario haya cerrado la página.
+Schedule::command('binance:poll')->everyMinute()->withoutOverlapping();

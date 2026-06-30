@@ -1,10 +1,18 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, usePage } from '@inertiajs/react';
+import BinanceDepositCard from './Partials/BinanceDepositCard';
 import PlatformCostCard from './Partials/PlatformCostCard';
 import TransactionList from './Partials/TransactionList';
 import WalletBalanceCard from './Partials/WalletBalanceCard';
 
-export default function Index({ wallet, transactions, platformCost, exchangeRate }) {
+export default function Index({
+    wallet,
+    transactions,
+    platformCost,
+    exchangeRate,
+    binanceNetworks,
+    binanceDefaultNetwork,
+}) {
     const flash = usePage().props.flash ?? {};
 
     return (
@@ -22,6 +30,11 @@ export default function Index({ wallet, transactions, platformCost, exchangeRate
                     )}
 
                     <WalletBalanceCard wallet={wallet} exchangeRate={exchangeRate} />
+
+                    <BinanceDepositCard
+                        networks={binanceNetworks}
+                        defaultNetwork={binanceDefaultNetwork}
+                    />
 
                     <PlatformCostCard platformCost={platformCost} />
 

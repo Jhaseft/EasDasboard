@@ -64,4 +64,34 @@ return [
         'qr_ttl_days'    => (int) env('BANECO_QR_TTL_DAYS', 1),
     ],
 
+    // Binance — recarga con USDT. El usuario deposita USDT a una de nuestras
+    // direcciones y el backend lo detecta vía el historial de depósitos (API key
+    // de SOLO LECTURA). 1 USDT = 1 USD, sin tipo de cambio.
+    'binance' => [
+        'key'             => env('BINANCE_API_KEY'),
+        'secret'          => env('BINANCE_API_SECRET'),
+        'base'            => env('BINANCE_API_BASE_URL', 'https://api.binance.com'),
+        'coin'            => env('BINANCE_COIN', 'USDT'),
+        'default_network' => env('BINANCE_DEFAULT_NETWORK', 'TRX'),
+
+        // Redes activas: solo las que tienen dirección configurada (BINANCE_WALLET_<RED>).
+        'networks' => array_values(array_filter([
+            ['network' => 'TRX',      'label' => 'TRC20',     'wallet' => env('BINANCE_WALLET_TRX')],
+            ['network' => 'BSC',      'label' => 'BEP20',     'wallet' => env('BINANCE_WALLET_BSC')],
+            ['network' => 'MATIC',    'label' => 'Polygon',   'wallet' => env('BINANCE_WALLET_MATIC')],
+            ['network' => 'ETH',      'label' => 'ERC20',     'wallet' => env('BINANCE_WALLET_ETH')],
+            ['network' => 'ARBITRUM', 'label' => 'Arbitrum',  'wallet' => env('BINANCE_WALLET_ARBITRUM')],
+            ['network' => 'OPTIMISM', 'label' => 'Optimism',  'wallet' => env('BINANCE_WALLET_OPTIMISM')],
+            ['network' => 'AVAX',     'label' => 'Avalanche', 'wallet' => env('BINANCE_WALLET_AVAX')],
+            ['network' => 'BASE',     'label' => 'Base',      'wallet' => env('BINANCE_WALLET_BASE')],
+            ['network' => 'SOL',      'label' => 'Solana',    'wallet' => env('BINANCE_WALLET_SOL')],
+        ], fn ($n) => ! empty($n['wallet']))),
+
+        'underpay_tolerance'       => (float) env('BINANCE_UNDERPAY_TOLERANCE_PERCENT', 0.5),
+        'overpay_tolerance'        => (float) env('BINANCE_OVERPAY_TOLERANCE_PERCENT', 5),
+        'intent_ttl_minutes'       => (int) env('BINANCE_INTENT_TTL_MINUTES', 30),
+        'history_lookback_minutes' => (int) env('BINANCE_HISTORY_LOOKBACK_MINUTES', 90),
+        'manual_lookback_minutes'  => (int) env('BINANCE_MANUAL_CONFIRM_LOOKBACK_MINUTES', 1440),
+    ],
+
 ];

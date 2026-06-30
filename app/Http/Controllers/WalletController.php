@@ -31,6 +31,11 @@ class WalletController extends Controller
             'transactions' => $transactions,
             'platformCost' => $this->platform->monthlyBreakdown($request->user()),
             'exchangeRate' => SystemConfig::usdToBob(),
+            'binanceNetworks' => array_map(fn ($n) => [
+                'network' => $n['network'],
+                'label'   => $n['label'],
+            ], (array) config('services.binance.networks', [])),
+            'binanceDefaultNetwork' => config('services.binance.default_network', 'TRX'),
         ]);
     }
 
