@@ -23,13 +23,16 @@ function SidebarLink({ href, active, children, leftIcon, onClick }) {
             href={href}
             onClick={onClick}
             className={
-                'group flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition ' +
+                'group relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition ' +
                 (active
-                    ? 'bg-indigo-50 text-indigo-700'
-                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900')
+                    ? 'bg-emerald-500/15 text-white'
+                    : 'text-slate-400 hover:bg-white/5 hover:text-white')
             }
         >
-            <span className={active ? 'text-indigo-600' : 'text-gray-400 group-hover:text-gray-500'}>
+            {active && (
+                <span className="absolute inset-y-1.5 left-0 w-1 rounded-r bg-emerald-400" />
+            )}
+            <span className={active ? 'text-emerald-400' : 'text-slate-500 group-hover:text-slate-300'}>
                 {leftIcon}
             </span>
             {children}
@@ -41,10 +44,15 @@ function SidebarContent({ nav, user, onNavigate }) {
     return (
         <div className="flex h-full flex-col">
             {/* Logo */}
-            <div className="flex h-16 shrink-0 items-center gap-2 border-b border-gray-100 px-6">
-                <Link href={route('dashboard')} className="flex items-center gap-2">
-                    <ApplicationLogo className="h-8 w-auto fill-current text-indigo-600" />
-                    <span className="text-base font-bold tracking-tight text-gray-800">EAS</span>
+            <div className="flex h-16 shrink-0 items-center gap-2 border-b border-white/10 px-6">
+                <Link href={route('dashboard')} className="flex items-center gap-2.5">
+                    <div className="flex size-8 items-center justify-center rounded-lg bg-gradient-to-br from-emerald-400 to-cyan-500 text-slate-900 shadow-lg shadow-emerald-500/30">
+                        <svg className="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M3 17l5-5 4 4 7-8" />
+                            <path d="M16 8h3v3" />
+                        </svg>
+                    </div>
+                    <span className="text-base font-bold tracking-tight text-white">EAS</span>
                 </Link>
             </div>
 
@@ -64,14 +72,14 @@ function SidebarContent({ nav, user, onNavigate }) {
             </nav>
 
             {/* Usuario */}
-            <div className="border-t border-gray-100 p-3">
+            <div className="border-t border-white/10 p-3">
                 <div className="flex items-center gap-3 px-2 py-2">
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-indigo-100 text-sm font-semibold text-indigo-700">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-emerald-400 to-cyan-500 text-sm font-semibold text-slate-900">
                         {user.name?.charAt(0).toUpperCase()}
                     </div>
                     <div className="min-w-0 flex-1">
-                        <div className="truncate text-sm font-medium text-gray-800">{user.name}</div>
-                        <div className="truncate text-xs text-gray-400">{user.email}</div>
+                        <div className="truncate text-sm font-medium text-white">{user.name}</div>
+                        <div className="truncate text-xs text-slate-400">{user.email}</div>
                     </div>
                 </div>
                 <div className="mt-1 space-y-1">
@@ -87,9 +95,9 @@ function SidebarContent({ nav, user, onNavigate }) {
                         href={route('logout')}
                         method="post"
                         as="button"
-                        className="group flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-gray-600 transition hover:bg-red-50 hover:text-red-600"
+                        className="group flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-slate-400 transition hover:bg-red-500/10 hover:text-red-400"
                     >
-                        <span className="text-gray-400 group-hover:text-red-500">{ICONS.logout}</span>
+                        <span className="text-slate-500 group-hover:text-red-400">{ICONS.logout}</span>
                         Cerrar sesión
                     </Link>
                 </div>
@@ -119,14 +127,14 @@ export default function AuthenticatedLayout({ header, children }) {
                         className="fixed inset-0 bg-gray-900/50"
                         onClick={() => setSidebarOpen(false)}
                     />
-                    <div className="fixed inset-y-0 left-0 w-64 bg-white shadow-xl">
+                    <div className="fixed inset-y-0 left-0 w-64 bg-slate-900 shadow-xl">
                         <SidebarContent nav={nav} user={user} onNavigate={() => setSidebarOpen(false)} />
                     </div>
                 </div>
             )}
 
             {/* Sidebar fijo (desktop) */}
-            <aside className="hidden lg:fixed lg:inset-y-0 lg:left-0 lg:z-30 lg:block lg:w-64 lg:border-r lg:border-gray-200 lg:bg-white">
+            <aside className="hidden lg:fixed lg:inset-y-0 lg:left-0 lg:z-30 lg:block lg:w-64 lg:border-r lg:border-white/10 lg:bg-slate-900">
                 <SidebarContent nav={nav} user={user} />
             </aside>
 
