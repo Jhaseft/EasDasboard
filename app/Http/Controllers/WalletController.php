@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\SystemConfig;
 use App\Services\Wallet\PlatformBilling;
 use App\Services\Wallet\WalletService;
 use Illuminate\Http\RedirectResponse;
@@ -29,6 +30,7 @@ class WalletController extends Controller
             'wallet' => $wallet->only('balance', 'currency'),
             'transactions' => $transactions,
             'platformCost' => $this->platform->monthlyBreakdown($request->user()),
+            'exchangeRate' => SystemConfig::usdToBob(),
         ]);
     }
 

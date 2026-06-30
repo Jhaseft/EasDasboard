@@ -51,4 +51,17 @@ return [
         ],
     ],
 
+    // Banco Económico — QR Simple. Método de pago para recargar la billetera:
+    // el usuario recarga en USD y el QR cobra el equivalente en BOB (usd_to_bob).
+    'baneco' => [
+        'base'           => env('BANECO_API_BASE'),
+        'aes_key'        => env('BANECO_AES_KEY'),
+        'username'       => env('BANECO_USERNAME'),
+        'password'       => env('BANECO_PASSWORD'),
+        'account_credit' => env('BANECO_ACCOUNT_CREDIT'),
+        'currency'       => env('BANECO_CURRENCY', 'BOB'),
+        'usd_to_bob'     => (float) env('BANECO_USD_TO_BOB', 6.9),
+        'qr_ttl_days'    => (int) env('BANECO_QR_TTL_DAYS', 1),
+    ],
+
 ];

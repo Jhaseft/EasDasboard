@@ -8,6 +8,7 @@ use App\Http\Controllers\MarketplaceController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SlaveAccountController;
 use App\Http\Controllers\WalletController;
+use App\Http\Controllers\WalletQrController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -56,6 +57,12 @@ Route::middleware('auth')->group(function () {
     // Billetera
     Route::get('/wallet', [WalletController::class, 'index'])->name('wallet.index');
     Route::post('/wallet/deposit', [WalletController::class, 'deposit'])->name('wallet.deposit');
+
+    // Recarga con QR (Banco Económico) — página de pago + confirmación por polling
+    Route::post('/wallet/qr', [WalletQrController::class, 'store'])->name('wallet.qr.store');
+    Route::get('/wallet/qr/{qrId}', [WalletQrController::class, 'show'])->name('wallet.qr.show');
+    Route::get('/wallet/qr/{qrId}/status', [WalletQrController::class, 'status'])->name('wallet.qr.status');
+    Route::delete('/wallet/qr/{qrId}', [WalletQrController::class, 'destroy'])->name('wallet.qr.destroy');
 
     // Módulo webhook (add-on $15/mes)
     Route::post('/billing/webhook-module', [BillingController::class, 'enableWebhookModule'])->name('billing.webhook-module.enable');
